@@ -41,6 +41,9 @@ type FrozenResource[GA any, Alpha any, Beta any] interface {
 	// being compared. Cross Alpha and Beta comparisons are not
 	// currently supported.
 	Diff(other FrozenResource[GA, Alpha, Beta]) (*DiffResult, error)
+
+	// TypeTrait returns the type trait for this resource.
+	TypeTrait() TypeTrait[GA, Alpha, Beta]
 }
 
 type frozenResource[GA any, Alpha any, Beta any] struct {
@@ -54,6 +57,9 @@ func (obj *frozenResource[GA, Alpha, Beta]) ResourceID() *cloud.ResourceID { ret
 func (obj *frozenResource[GA, Alpha, Beta]) ToGA() (*GA, error)            { return obj.x.ToGA() }
 func (obj *frozenResource[GA, Alpha, Beta]) ToAlpha() (*Alpha, error)      { return obj.x.ToAlpha() }
 func (obj *frozenResource[GA, Alpha, Beta]) ToBeta() (*Beta, error)        { return obj.x.ToBeta() }
+func (obj *frozenResource[GA, Alpha, Beta]) TypeTrait() TypeTrait[GA, Alpha, Beta] {
+	return obj.x.typeTrait
+}
 
 // Diff implements FrozenResource.
 func (obj *frozenResource[GA, Alpha, Beta]) Diff(other FrozenResource[GA, Alpha, Beta]) (*DiffResult, error) {

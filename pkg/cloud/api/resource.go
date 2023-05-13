@@ -84,6 +84,22 @@ func NewResource[GA any, Alpha any, Beta any](
 		typeTrait:  typeTrait,
 		resourceID: resourceID,
 	}
+
+	// Set .Name from the ResourceID.
+	setName := func(v reflect.Value) {
+		if ft, ok := v.Type().FieldByName("Name"); !ok || ft.Type.Kind() != reflect.String {
+			return
+		}
+		f := v.FieldByName("Name")
+		if !f.IsValid() {
+			panic(fmt.Sprintf("type does not have .Name (%T)", v.Type()))
+		}
+		f.Set(reflect.ValueOf(resourceID.Key.Name))
+	}
+	setName(reflect.ValueOf(&obj.ga).Elem())
+	setName(reflect.ValueOf(&obj.alpha).Elem())
+	setName(reflect.ValueOf(&obj.beta).Elem())
+
 	return obj
 }
 
@@ -323,6 +339,9 @@ func (u *resource[GA, Alpha, Beta]) ToBeta() (*Beta, error) {
 	}
 	return &u.beta, nil
 }
+
+// TODO: Set semantics need to be reworked. The copy over to the other versions
+// should skip Access validation. Don't use this for the time being.
 
 func (u *resource[GA, Alpha, Beta]) Set(src *GA) error {
 	c := newCopier(u.copierOptions...)
