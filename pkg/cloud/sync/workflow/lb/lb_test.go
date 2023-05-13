@@ -35,7 +35,7 @@ func TestLB(t *testing.T) {
 	// Address
 	maddr1 := b.N("addr").Address().Resource()
 	addr1, _ := maddr1.Freeze()
-	graph.AddAddress(addr1, na).SetState(sync.NodeStateExists)
+	graph.AddAddress(addr1, na).SetState(sync.NodeExists)
 
 	// ForwardingRule
 	mfr1 := b.N("fr").ForwardingRule().Resource()
@@ -44,7 +44,7 @@ func TestLB(t *testing.T) {
 		x.Target = b.N("tp").TargetHttpProxy().SelfLink()
 	})
 	fr1, _ := mfr1.Freeze()
-	graph.AddForwardingRule(fr1, na).SetState(sync.NodeStateExists)
+	graph.AddForwardingRule(fr1, na).SetState(sync.NodeExists)
 
 	// TargetHttpProxy
 	mthp1 := b.N("tp").TargetHttpProxy().Resource()
@@ -52,7 +52,7 @@ func TestLB(t *testing.T) {
 		x.UrlMap = b.N("um").UrlMap().SelfLink()
 	})
 	thp1, _ := mthp1.Freeze()
-	graph.AddTargetHttpProxy(thp1, na).SetState(sync.NodeStateExists)
+	graph.AddTargetHttpProxy(thp1, na).SetState(sync.NodeExists)
 
 	// UrlMap
 	mum1 := b.N("um").UrlMap().Resource()
@@ -60,7 +60,7 @@ func TestLB(t *testing.T) {
 		x.DefaultService = b.N("bs").BackendService().SelfLink()
 	})
 	um1, _ := mum1.Freeze()
-	graph.AddUrlMap(um1, na).SetState(sync.NodeStateExists)
+	graph.AddUrlMap(um1, na).SetState(sync.NodeExists)
 
 	// BackendService
 	mbs1 := b.N("bs").BackendService().Resource()
@@ -73,17 +73,17 @@ func TestLB(t *testing.T) {
 		}
 	})
 	bs1, _ := mbs1.Freeze()
-	graph.AddBackendService(bs1, na).SetState(sync.NodeStateExists)
+	graph.AddBackendService(bs1, na).SetState(sync.NodeExists)
 
 	// HealthCheck
 	mhc1 := b.N("hc").HealthCheck().Resource()
 	hc1, _ := mhc1.Freeze()
-	graph.AddHealthCheck(hc1, na).SetState(sync.NodeStateExists)
+	graph.AddHealthCheck(hc1, na).SetState(sync.NodeExists)
 
 	// NEG
 	mneg1 := b.N("neg").DefaultZone().NetworkEndpointGroup().Resource()
 	neg1, _ := mneg1.Freeze()
-	graph.AddNetworkEndpointGroup(neg1, na).SetState(sync.NodeStateExists)
+	graph.AddNetworkEndpointGroup(neg1, na).SetState(sync.NodeExists)
 
 	if err := graph.Validate(); err != nil {
 		t.Fatalf("Graph.Validate = %v, want nil", err)
