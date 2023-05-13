@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/meta"
+	"k8s.io/klog/v2"
 )
 
 // ProjectRouter routes service calls to the appropriate GCE project.
@@ -42,4 +43,31 @@ type SingleProjectRouter struct {
 // ProjectID returns the project ID to be used for a call to the API.
 func (r *SingleProjectRouter) ProjectID(ctx context.Context, version meta.Version, service string) string {
 	return r.ID
+}
+
+// ContextProjectRouter uses a context key to provide an optional
+// project routing.
+type ContextProjectRouter struct {
+	DefaultProject string
+}
+
+// ProjectID implements ProjectRouter.
+func (r *ContextProjectRouter) ProjectID(ctx context.Context, version meta.Version, service string) string {
+	v := ctx.Value(projectContextKey("projectContext"))
+	if v == nil {
+		return r.DefaultProject
+	}
+	project, ok := v.(string)
+	if !ok {
+		klog.Errorf("invalid value type for projectContextKey: %T, value was %v", v, v)
+		return r.DefaultProject
+	}
+	return project
+}
+
+type projectContextKey string
+
+// WithProjectKey returns a new Context with the project context added.
+func WithProjectKey(ctx context.Context, project string) context.Context {
+	return context.WithValue(ctx, projectContextKey("projectContext"), project)
 }
