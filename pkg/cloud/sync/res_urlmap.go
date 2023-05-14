@@ -126,7 +126,7 @@ func (node *UrlMapNode) Diff(gotNode Node) (*Action, error) {
 	}, nil
 }
 
-func (node *UrlMapNode) Actions() []exec.Action { return nil }
+func (node *UrlMapNode) Actions(got Node) ([]exec.Action, error) { return nil, nil }
 
 // https://cloud.google.com/compute/docs/reference/rest/v1/urlMaps
 type urlMapTypeTrait struct {

@@ -103,7 +103,7 @@ func (node *HealthCheckNode) Diff(gotNode Node) (*Action, error) {
 	}, nil
 }
 
-func (node *HealthCheckNode) Actions() []exec.Action { return nil }
+func (node *HealthCheckNode) Actions(got Node) ([]exec.Action, error) { return nil, nil }
 
 // https://cloud.google.com/compute/docs/reference/rest/v1/HealthChecks
 type healthCheckTypeTrait struct {

@@ -97,7 +97,61 @@ func (node *AddressNode) Diff(gotNode Node) (*Action, error) {
 	}, nil
 }
 
-func (node *AddressNode) Actions() []exec.Action { return nil }
+func (node *AddressNode) Actions(got Node) ([]exec.Action, error) {
+	op := node.LocalPlan().Op()
+
+	switch op {
+	case OpCreate:
+		return []exec.Action{
+			&genericCreateAction[compute.Address, alpha.Address, beta.Address]{
+				ActionBase: exec.ActionBase{
+					Want: nil, // TODO
+				},
+				ops:      &addressOps{},
+				id:       node.ID(),
+				resource: node.resource,
+			},
+		}, nil
+
+	case OpDelete:
+		return []exec.Action{
+			&genericDeleteAction[compute.Address, alpha.Address, beta.Address]{
+				ActionBase: exec.ActionBase{
+					Want: nil, // TODO
+				},
+				ops: &addressOps{},
+				id:  node.ID(),
+			},
+		}, nil
+
+	case OpNothing:
+		return []exec.Action{exec.NewExistsEventAction(node.ID())}, nil
+
+	case OpRecreate:
+		return []exec.Action{
+			&genericDeleteAction[compute.Address, alpha.Address, beta.Address]{
+				ActionBase: exec.ActionBase{
+					Want: nil, // TODO
+				},
+				ops: &addressOps{},
+				id:  node.ID(),
+			},
+			&genericCreateAction[compute.Address, alpha.Address, beta.Address]{
+				ActionBase: exec.ActionBase{
+					Want: nil, // TODO
+				},
+				ops:      &addressOps{},
+				id:       node.ID(),
+				resource: node.resource,
+			},
+		}, nil
+
+	case OpUpdate:
+		// TODO
+	}
+	// TODO: propagate errors
+	return nil, fmt.Errorf("invalid plan op %s", op)
+}
 
 // See https://cloud.google.com/compute/docs/reference/rest/v1/addresses
 type addressTypeTrait struct {

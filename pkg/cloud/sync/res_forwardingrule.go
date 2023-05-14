@@ -149,7 +149,7 @@ func (node *ForwardingRuleNode) Diff(gotNode Node) (*Action, error) {
 	}, nil
 }
 
-func (node *ForwardingRuleNode) Actions() []exec.Action { return nil }
+func (node *ForwardingRuleNode) Actions(got Node) ([]exec.Action, error) { return nil, nil }
 
 // https://cloud.google.com/compute/docs/reference/rest/beta/forwardingRules
 type forwardingRuleTypeTrait struct {

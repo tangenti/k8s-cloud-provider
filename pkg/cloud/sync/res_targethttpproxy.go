@@ -124,7 +124,7 @@ func (node *TargetHttpProxyNode) Diff(gotNode Node) (*Action, error) {
 	}, nil
 }
 
-func (node *TargetHttpProxyNode) Actions() []exec.Action { return nil }
+func (node *TargetHttpProxyNode) Actions(got Node) ([]exec.Action, error) { return nil, nil }
 
 // https://cloud.google.com/compute/docs/reference/rest/v1/targetHttpProxies
 type targetHttpProxyTypeTrait struct {

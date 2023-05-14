@@ -17,6 +17,7 @@ limitations under the License.
 package exec
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
@@ -47,6 +48,8 @@ func (e *DropRefEvent) String() string {
 	return fmt.Sprintf("DropRef(%v => %v)\n", e.From, e.To)
 }
 
+func NewExistsEvent(id *cloud.ResourceID) Event { return &ExistsEvent{ID: id} }
+
 type ExistsEvent struct{ ID *cloud.ResourceID }
 
 func (e *ExistsEvent) Equal(other Event) bool {
@@ -58,6 +61,8 @@ func (e *ExistsEvent) Equal(other Event) bool {
 }
 
 func (e *ExistsEvent) String() string { return fmt.Sprintf("Exists(%v)", e.ID) }
+
+func NewNotExistsEvent(id *cloud.ResourceID) Event { return &NotExistsEvent{ID: id} }
 
 type NotExistsEvent struct{ ID *cloud.ResourceID }
 
@@ -72,24 +77,27 @@ func (e *NotExistsEvent) Equal(other Event) bool {
 func (e *NotExistsEvent) String() string { return fmt.Sprintf("NotExists(%v)", e.ID) }
 
 type Action interface {
-	Update(Event) // TODO error
-	Run() ([]Event, error)
-	String() string
 	CanRun() bool
+	Update(Event) // TODO error
+
+	Run(context.Context, cloud.Cloud) ([]Event, error)
+	String() string
 }
 
 type ActionBase struct {
-	want []Event
-	done []Event
+	// Want are the events this action is still waiting for.
+	Want []Event
+	// Done tracks the events that have happened. This is for debugging.
+	Done []Event
 }
 
-func (b *ActionBase) CanRun() bool { return len(b.want) == 0 }
+func (b *ActionBase) CanRun() bool { return len(b.Want) == 0 }
 
 func (b *ActionBase) Update(ev Event) {
-	for i, wantEv := range b.want {
+	for i, wantEv := range b.Want {
 		if wantEv.Equal(ev) {
-			b.want = append(b.want[0:i], b.want[i+1:]...)
-			b.done = append(b.done, wantEv)
+			b.Want = append(b.Want[0:i], b.Want[i+1:]...)
+			b.Done = append(b.Done, wantEv)
 		}
 	}
 }
@@ -108,56 +116,16 @@ type eventOnlyAction struct {
 	events []Event
 }
 
-func (b *eventOnlyAction) CanRun() bool          { return true }
-func (b *eventOnlyAction) Update(Event)          {}
-func (a *eventOnlyAction) Run() ([]Event, error) { return a.events, nil }
-func (a *eventOnlyAction) String() string        { return fmt.Sprintf("EventOnlyAction(%v)", a.events) }
+func (b *eventOnlyAction) CanRun() bool   { return true }
+func (b *eventOnlyAction) Update(Event)   {}
+func (a *eventOnlyAction) String() string { return fmt.Sprintf("EventOnlyAction(%v)", a.events) }
 
-type deleteAction struct {
-	ActionBase
-	id *cloud.ResourceID
-}
-
-func (a *deleteAction) Run() ([]Event, error) {
-	fmt.Printf("%s run\n", a)
-	return []Event{
-		&NotExistsEvent{ID: a.id},
-	}, nil
-}
-
-func (a *deleteAction) String() string { return fmt.Sprintf("DeleteAction(%v)", a.id) }
-
-type createAction struct {
-	ActionBase
-	id *cloud.ResourceID
-}
-
-func (a *createAction) Run() ([]Event, error) {
-	fmt.Printf("%s run\n", a)
-	return []Event{
-		&ExistsEvent{ID: a.id},
-	}, nil
-}
-
-func (a *createAction) String() string { return fmt.Sprintf("CreateAction(%v)", a.id) }
-
-type updateAction struct {
-	ActionBase
-	from *cloud.ResourceID // XXX
-}
-
-func (a *updateAction) Run() ([]Event, error) {
-	fmt.Printf("%s run\n", a)
-	return []Event{ // TODO
-	}, nil
-}
-
-func (a *updateAction) String() string { return fmt.Sprintf("UpdateAction(%v)", a.from) }
+func (a *eventOnlyAction) Run(context.Context, cloud.Cloud) ([]Event, error) { return a.events, nil }
 
 type Executor interface {
 	// Run the actions. Returns the remaining actions that could not be
 	// completed and which errors occurred during execution.
-	Run() ([]Action, error)
+	Run(context.Context, cloud.Cloud) ([]Action, error)
 }
 
 func NewExecutor(initialEvents []Event, pending []Action) Executor {
@@ -171,13 +139,13 @@ type serialExecutor struct {
 	done    []Action
 }
 
-func (ex *serialExecutor) Run() ([]Action, error) {
-	ex.runEventOnly()
+func (ex *serialExecutor) Run(ctx context.Context, c cloud.Cloud) ([]Action, error) {
+	ex.runEventOnly(ctx, c)
 
 	for a := ex.next(); a != nil; a = ex.next() {
 		fmt.Println("executor loop")
 
-		events, err := a.Run()
+		events, err := a.Run(ctx, c)
 		if err != nil {
 			// TODO: maybe handle propagating the error?
 			return ex.pending, err
@@ -192,12 +160,12 @@ func (ex *serialExecutor) Run() ([]Action, error) {
 	return ex.pending, nil
 }
 
-func (ex *serialExecutor) runEventOnly() {
+func (ex *serialExecutor) runEventOnly(ctx context.Context, c cloud.Cloud) {
 	var nonEventOnly []Action
 	for _, a := range ex.pending {
 		switch a := a.(type) {
 		case *eventOnlyAction:
-			evs, _ := a.Run()
+			evs, _ := a.Run(ctx, c)
 			for _, ev := range evs {
 				ex.signal(ev)
 			}

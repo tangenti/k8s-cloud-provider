@@ -15,39 +15,3 @@ limitations under the License.
 */
 
 package exec
-
-import (
-	"testing"
-
-	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
-	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/meta"
-)
-
-func TestExecutor(t *testing.T) {
-	resId := func(x string) *cloud.ResourceID {
-		return &cloud.ResourceID{
-			ProjectID: "p",
-			Resource:  "fakes",
-			Key:       meta.GlobalKey(x),
-		}
-	}
-
-	exec := NewExecutor(
-		[]Event{},
-		[]Action{
-			&updateAction{
-				ActionBase: ActionBase{
-					want: []Event{
-						&ExistsEvent{ID: resId("a")},
-						&NotExistsEvent{ID: resId("b")},
-					},
-				},
-				from: resId("c"),
-			},
-			&createAction{id: resId("a")},
-			&deleteAction{
-				id: resId("b"),
-			},
-		})
-	t.Error(exec.Run())
-}

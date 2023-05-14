@@ -120,7 +120,7 @@ func (node *fakeNode) Diff(gotNode Node) (*Action, error) {
 func (*fakeNode) Get(context.Context, cloud.Cloud) error  { return nil }
 func (*fakeNode) Sync(context.Context, cloud.Cloud) error { return nil }
 func (*fakeNode) GenerateLocalPlan() error                { return nil }
-func (*fakeNode) Actions() []exec.Action                  { return nil }
+func (*fakeNode) Actions(got Node) ([]exec.Action, error) { return nil, nil }
 
 type fakeTypeTrait struct {
 	api.BaseTypeTrait[fakeResource, fakeResource, fakeResource]

@@ -105,8 +105,9 @@ type Node interface {
 	LocalPlan() *Plan
 
 	// Actions needed to perform the plan. This will be empty for graphs that
-	// have not been planned.
-	Actions() []exec.Action
+	// have not been planned. "got" is the current state of the Node in the
+	// "got" graph.
+	Actions(got Node) ([]exec.Action, error)
 
 	// Internal methods.
 	clearInRefs()
