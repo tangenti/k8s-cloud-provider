@@ -138,7 +138,7 @@ func (w *lbWorkflow) sanityCheck() error {
 			// If A => B; if B is to be deleted, then A must be deleted.
 			for _, refs := range node.InRefs() {
 				if inNode := w.want.Resource(refs.To); inNode == nil {
-					return fmt.Errorf("lb workflow: inRef points to non-existant node %v", refs.To)
+					return fmt.Errorf("lb workflow: inRef from node %v that doesn't exist", refs.From)
 				} else if inNode.LocalPlan().Op() != sync.OpDelete {
 					return fmt.Errorf("lb workflow: %v to be deleted, but inRef %v is not", node.ID(), inNode.ID())
 				}
