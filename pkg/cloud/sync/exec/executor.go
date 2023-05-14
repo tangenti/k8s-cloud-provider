@@ -94,6 +94,25 @@ func (b *ActionBase) Update(ev Event) {
 	}
 }
 
+func NewExistsEventAction(id *cloud.ResourceID) Action {
+	return &eventOnlyAction{
+		events: []Event{
+			&ExistsEvent{ID: id},
+		},
+	}
+}
+
+// eventOnlyAction exist only to signal events that already happened (e.g.
+// resource already exists).
+type eventOnlyAction struct {
+	events []Event
+}
+
+func (b *eventOnlyAction) CanRun() bool          { return true }
+func (b *eventOnlyAction) Update(Event)          {}
+func (a *eventOnlyAction) Run() ([]Event, error) { return a.events, nil }
+func (a *eventOnlyAction) String() string        { return fmt.Sprintf("EventOnlyAction(%v)", a.events) }
+
 type deleteAction struct {
 	ActionBase
 	id *cloud.ResourceID
@@ -143,21 +162,17 @@ type Executor interface {
 
 func NewExecutor(initialEvents []Event, pending []Action) Executor {
 	return &serialExecutor{
-		initialEvents: initialEvents,
-		pending:       pending,
+		pending: pending,
 	}
 }
 
 type serialExecutor struct {
-	initialEvents []Event
-	pending       []Action
-	done          []Action
+	pending []Action
+	done    []Action
 }
 
 func (ex *serialExecutor) Run() ([]Action, error) {
-	for _, ev := range ex.initialEvents {
-		ex.signal(ev)
-	}
+	ex.runEventOnly()
 
 	for a := ex.next(); a != nil; a = ex.next() {
 		fmt.Println("executor loop")
@@ -173,7 +188,24 @@ func (ex *serialExecutor) Run() ([]Action, error) {
 			ex.signal(ev)
 		}
 	}
+
 	return ex.pending, nil
+}
+
+func (ex *serialExecutor) runEventOnly() {
+	var nonEventOnly []Action
+	for _, a := range ex.pending {
+		switch a := a.(type) {
+		case *eventOnlyAction:
+			evs, _ := a.Run()
+			for _, ev := range evs {
+				ex.signal(ev)
+			}
+		default:
+			nonEventOnly = append(nonEventOnly, a)
+		}
+	}
+	ex.pending = nonEventOnly
 }
 
 func (ex *serialExecutor) next() Action {
