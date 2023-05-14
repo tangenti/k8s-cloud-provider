@@ -24,6 +24,7 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/api"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/meta"
+	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/exec"
 	"k8s.io/klog/v2"
 
 	alpha "google.golang.org/api/compute/v0.alpha"
@@ -147,6 +148,8 @@ func (node *ForwardingRuleNode) Diff(gotNode Node) (*Action, error) {
 		Why:       "No diff between got and want",
 	}, nil
 }
+
+func (node *ForwardingRuleNode) Actions() []exec.Action { return nil }
 
 // https://cloud.google.com/compute/docs/reference/rest/beta/forwardingRules
 type forwardingRuleTypeTrait struct {

@@ -23,6 +23,7 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/api"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/meta"
+	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/exec"
 
 	alpha "google.golang.org/api/compute/v0.alpha"
 	beta "google.golang.org/api/compute/v0.beta"
@@ -95,6 +96,8 @@ func (node *AddressNode) Diff(gotNode Node) (*Action, error) {
 		Why:       "No diff between got and want",
 	}, nil
 }
+
+func (node *AddressNode) Actions() []exec.Action { return nil }
 
 // See https://cloud.google.com/compute/docs/reference/rest/v1/addresses
 type addressTypeTrait struct {

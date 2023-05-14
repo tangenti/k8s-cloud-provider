@@ -23,6 +23,7 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/api"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/meta"
+	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/exec"
 	"github.com/kr/pretty"
 )
 
@@ -102,6 +103,10 @@ type Node interface {
 	// LocalPlan returns the plan for updating this Node. This will be nil for
 	// graphs that have not been planned.
 	LocalPlan() *Plan
+
+	// Actions needed to perform the plan. This will be empty for graphs that
+	// have not been planned.
+	Actions() []exec.Action
 
 	// Internal methods.
 	clearInRefs()

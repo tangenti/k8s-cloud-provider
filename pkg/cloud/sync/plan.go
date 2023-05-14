@@ -34,6 +34,7 @@ func (p *Plan) Op() Operation { return p.operation }
 
 // Set the plan to the specified action.
 func (p *Plan) Set(a Action) {
+	// TODO: this needs to change the set of actions.
 	p.operation = a.Operation
 	// Save the pervious actions for debugging.
 	p.action = append(p.action, a)

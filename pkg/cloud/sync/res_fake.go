@@ -23,6 +23,7 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/api"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/meta"
+	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/exec"
 )
 
 // fakeResource is a resource used only for testing.
@@ -119,6 +120,7 @@ func (node *fakeNode) Diff(gotNode Node) (*Action, error) {
 func (*fakeNode) Get(context.Context, cloud.Cloud) error  { return nil }
 func (*fakeNode) Sync(context.Context, cloud.Cloud) error { return nil }
 func (*fakeNode) GenerateLocalPlan() error                { return nil }
+func (*fakeNode) Actions() []exec.Action                  { return nil }
 
 type fakeTypeTrait struct {
 	api.BaseTypeTrait[fakeResource, fakeResource, fakeResource]

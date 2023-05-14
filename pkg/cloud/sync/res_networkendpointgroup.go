@@ -23,6 +23,7 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/api"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/meta"
+	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/exec"
 
 	alpha "google.golang.org/api/compute/v0.alpha"
 	beta "google.golang.org/api/compute/v0.beta"
@@ -101,6 +102,8 @@ func (node *NetworkEndpointGroupNode) Diff(gotNode Node) (*Action, error) {
 		Why:       "No diff between got and want",
 	}, nil
 }
+
+func (node *NetworkEndpointGroupNode) Actions() []exec.Action { return nil }
 
 // https://cloud.google.com/compute/docs/reference/rest/v1/networkEndpointGroups
 type networkEndpointGroupTypeTrait struct {
