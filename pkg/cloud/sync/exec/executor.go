@@ -89,6 +89,6 @@ func (ex *serialExecutor) next() Action {
 
 func (ex *serialExecutor) signal(ev Event) {
 	for _, a := range ex.pending {
-		a.Update(ev)
+		a.Signal(ev)
 	}
 }

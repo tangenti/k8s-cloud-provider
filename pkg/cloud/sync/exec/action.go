@@ -23,14 +23,23 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
 )
 
+// Action is an operation that updates external resources.
 type Action interface {
+	// CanRun returns true if all of the Events this Action is waiting for have
+	// been signaled.
 	CanRun() bool
-	Update(Event) // TODO error
-
+	// Signal this Action with the Event that has occurred. TODO: error
+	// propagation.
+	Signal(Event)
+	// Run the Action, performing the operations. Returns a list of Events to
+	// signal and/or any errors that have occurred.
 	Run(context.Context, cloud.Cloud) ([]Event, error)
+	// String returns a human-readable representation of the Action for logging.
 	String() string
 }
 
+// ActionBase is a helper that implements some standard behaviors of common
+// Action implementation.
 type ActionBase struct {
 	// Want are the events this action is still waiting for.
 	Want []Event
@@ -40,7 +49,7 @@ type ActionBase struct {
 
 func (b *ActionBase) CanRun() bool { return len(b.Want) == 0 }
 
-func (b *ActionBase) Update(ev Event) {
+func (b *ActionBase) Signal(ev Event) {
 	for i, wantEv := range b.Want {
 		if wantEv.Equal(ev) {
 			b.Want = append(b.Want[0:i], b.Want[i+1:]...)
@@ -49,22 +58,25 @@ func (b *ActionBase) Update(ev Event) {
 	}
 }
 
-func NewExistsEventAction(id *cloud.ResourceID) Action {
+// NewExistsEventOnlyAction returns an eventOnlyAction. This Action Signals events
+// that represent the existance of a resource at the start of execution. This is
+// a synthetic event will be signaled at the start of execution before any
+// Actions are performed.
+func NewExistsEventOnlyAction(id *cloud.ResourceID) Action {
 	return &eventOnlyAction{
-		events: []Event{
-			&existsEvent{id: id},
-		},
+		events: []Event{&existsEvent{id: id}},
 	}
 }
 
 // eventOnlyAction exist only to signal events that already happened (e.g.
-// resource already exists).
+// resource already exists). These Actions do not have side-effect; they only
+// exist to model the starting conditions of an execution.
 type eventOnlyAction struct {
 	events []Event
 }
 
 func (b *eventOnlyAction) CanRun() bool   { return true }
-func (b *eventOnlyAction) Update(Event)   {}
+func (b *eventOnlyAction) Signal(Event)   {}
 func (a *eventOnlyAction) String() string { return fmt.Sprintf("EventOnlyAction(%v)", a.events) }
 
 func (a *eventOnlyAction) Run(context.Context, cloud.Cloud) ([]Event, error) { return a.events, nil }

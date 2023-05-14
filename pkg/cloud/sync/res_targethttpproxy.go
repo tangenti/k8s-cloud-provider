@@ -152,7 +152,7 @@ func (node *TargetHttpProxyNode) Actions(got Node) ([]exec.Action, error) {
 		}, nil
 
 	case OpNothing:
-		return []exec.Action{exec.NewExistsEventAction(node.ID())}, nil
+		return []exec.Action{exec.NewExistsEventOnlyAction(node.ID())}, nil
 
 	case OpRecreate:
 		return []exec.Action{
