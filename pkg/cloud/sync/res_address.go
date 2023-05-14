@@ -149,8 +149,8 @@ func (node *AddressNode) Actions(got Node) ([]exec.Action, error) {
 	case OpUpdate:
 		// TODO
 	}
-	// TODO: propagate errors
-	return nil, fmt.Errorf("invalid plan op %s", op)
+
+	return nil, fmt.Errorf("AddressNode: invalid plan op %s", op)
 }
 
 // See https://cloud.google.com/compute/docs/reference/rest/v1/addresses

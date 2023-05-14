@@ -126,7 +126,61 @@ func (node *UrlMapNode) Diff(gotNode Node) (*Action, error) {
 	}, nil
 }
 
-func (node *UrlMapNode) Actions(got Node) ([]exec.Action, error) { return nil, nil }
+func (node *UrlMapNode) Actions(got Node) ([]exec.Action, error) {
+	op := node.LocalPlan().Op()
+
+	switch op {
+	case OpCreate:
+		return []exec.Action{
+			&genericCreateAction[compute.UrlMap, alpha.UrlMap, beta.UrlMap]{
+				ActionBase: exec.ActionBase{
+					Want: nil, // TODO
+				},
+				ops:      &urlMapOps{},
+				id:       node.ID(),
+				resource: node.resource,
+			},
+		}, nil
+
+	case OpDelete:
+		return []exec.Action{
+			&genericDeleteAction[compute.UrlMap, alpha.UrlMap, beta.UrlMap]{
+				ActionBase: exec.ActionBase{
+					Want: nil, // TODO
+				},
+				ops: &urlMapOps{},
+				id:  node.ID(),
+			},
+		}, nil
+
+	case OpNothing:
+		return []exec.Action{exec.NewExistsEventAction(node.ID())}, nil
+
+	case OpRecreate:
+		return []exec.Action{
+			&genericDeleteAction[compute.UrlMap, alpha.UrlMap, beta.UrlMap]{
+				ActionBase: exec.ActionBase{
+					Want: nil, // TODO
+				},
+				ops: &urlMapOps{},
+				id:  node.ID(),
+			},
+			&genericCreateAction[compute.UrlMap, alpha.UrlMap, beta.UrlMap]{
+				ActionBase: exec.ActionBase{
+					Want: nil, // TODO
+				},
+				ops:      &urlMapOps{},
+				id:       node.ID(),
+				resource: node.resource,
+			},
+		}, nil
+
+	case OpUpdate:
+		// TODO
+	}
+
+	return nil, fmt.Errorf("UrlMapNode: invalid plan op %s", op)
+}
 
 // https://cloud.google.com/compute/docs/reference/rest/v1/urlMaps
 type urlMapTypeTrait struct {
