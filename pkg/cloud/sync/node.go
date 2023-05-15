@@ -215,8 +215,11 @@ func createPreconditions(node Node) ([]exec.Event, error) {
 
 func deletePreconditions(node Node) []exec.Event {
 	var ret []exec.Event
-	// Condition: resource must exist.
-	ret = append(ret, exec.NewExistsEvent(node.ID()))
+
+	// Event: all references are removed. XXX-- this is wrong, these need to come from references in the got graph
+
+	// Condition: resource must exist. TODO: this seems to make issues
+	// ret = append(ret, exec.NewExistsEvent(node.ID()))
 	// Condition: no inRefs to the resource.
 	for _, ref := range node.InRefs() {
 		ret = append(ret, exec.NewDropRefEvent(ref.From, ref.To))
