@@ -39,33 +39,6 @@ func opCreateActions[GA any, Alpha any, Beta any](
 	}, nil
 }
 
-func opDeleteActions[GA any, Alpha any, Beta any](
-	ops genericOps[GA, Alpha, Beta],
-	node Node,
-) ([]exec.Action, error) {
-	return []exec.Action{
-		newGenericDeleteAction(deletePreconditions(node), ops, node.ID()),
-	}, nil
-}
-
-func opRecreateActions[GA any, Alpha any, Beta any](
-	ops genericOps[GA, Alpha, Beta],
-	node Node,
-	resource api.FrozenResource[GA, Alpha, Beta],
-) ([]exec.Action, error) {
-	deleteAction := newGenericDeleteAction(deletePreconditions(node), ops, node.ID())
-
-	createEvents, err := createPreconditions(node)
-	if err != nil {
-		return nil, err
-	}
-	// Condition: resource must have been deleted.
-	createEvents = append(createEvents, exec.NewNotExistsEvent(node.ID()))
-	createAction := newGenericCreateAction(createEvents, ops, node.ID(), resource)
-
-	return []exec.Action{deleteAction, createAction}, nil
-}
-
 func newGenericCreateAction[GA any, Alpha any, Beta any](
 	want []exec.Event,
 	ops genericOps[GA, Alpha, Beta],
@@ -103,56 +76,15 @@ func (a *genericCreateAction[GA, Alpha, Beta]) String() string {
 	return fmt.Sprintf("GenericCreateAction(%v)", a.id)
 }
 
-func newGenericDeleteAction[GA any, Alpha any, Beta any](
-	want []exec.Event,
-	ops genericOps[GA, Alpha, Beta],
-	id *cloud.ResourceID,
-) *genericDeleteAction[GA, Alpha, Beta] {
-	return &genericDeleteAction[GA, Alpha, Beta]{
-		ActionBase: exec.ActionBase{Want: want},
-		ops:        ops,
-		id:         id,
+func createPreconditions(want Node) ([]exec.Event, error) {
+	outRefs, err := want.OutRefs()
+	if err != nil {
+		return nil, err
 	}
-}
-
-type genericDeleteAction[GA any, Alpha any, Beta any] struct {
-	exec.ActionBase
-	ops genericOps[GA, Alpha, Beta]
-	id  *cloud.ResourceID
-}
-
-func (a *genericDeleteAction[GA, Alpha, Beta]) Run(
-	ctx context.Context,
-	c cloud.Cloud,
-) ([]exec.Event, error) {
-	err := a.ops.deleteFuncs(c).do(ctx, a.id)
-	return []exec.Event{exec.NewNotExistsEvent(a.id)}, err
-}
-
-func (a *genericDeleteAction[GA, Alpha, Beta]) DryRun() []exec.Event {
-	return []exec.Event{exec.NewNotExistsEvent(a.id)}
-}
-
-func (a *genericDeleteAction[GA, Alpha, Beta]) String() string {
-	return fmt.Sprintf("GenericDeleteAction(%v)", a.id)
-}
-
-// TODO
-type genericUpdateAction[GA any, Alpha any, Beta any] struct {
-	exec.ActionBase
-}
-
-func (a *genericUpdateAction[GA, Alpha, Beta]) Run(
-	ctx context.Context,
-	c cloud.Cloud,
-) ([]exec.Event, error) {
-	return nil, nil
-}
-
-func (a *genericUpdateAction[GA, Alpha, Beta]) DryRun() []exec.Event {
-	return nil
-}
-
-func (a *genericUpdateAction[GA, Alpha, Beta]) String() string {
-	return "GenericUpdateAction TODO"
+	var events []exec.Event
+	// Condition: references must exist before creation.
+	for _, ref := range outRefs {
+		events = append(events, exec.NewExistsEvent(ref.To))
+	}
+	return events, nil
 }

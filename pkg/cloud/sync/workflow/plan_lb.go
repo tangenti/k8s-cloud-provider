@@ -60,20 +60,26 @@ func (w *lbPlanner) plan(ctx context.Context) error {
 	}
 
 	// Fetch the current resource graph from Cloud.
-	err := sync.TransitiveClosure(ctx, w.cloud, w.got) // TODO: resource_prefix, ownership
+	// TODO: resource_prefix, ownership due to prefix etc.
+	err := sync.TransitiveClosure(ctx, w.cloud, w.got,
+		sync.TransitiveClosureOnGet(func(n sync.Node) error {
+			n.SetOwnership(sync.OwnershipManaged)
+			return nil
+		}),
+	)
 	if err != nil {
 		return err
 	}
 
 	// Copy nodes in "got" that aren't in "want" as not existing so the planner
 	// will mark them for deletion.
-	for _, node := range w.got.All() {
-		if w.want.Resource(node.ID()) != nil {
+	for _, gotNode := range w.got.All() {
+		if w.want.Resource(gotNode.ID()) != nil {
 			continue
 		}
-		wantNode := node.NewEmptyNode()
+		wantNode := gotNode.NewEmptyNode()
 		wantNode.SetState(sync.NodeDoesNotExist)
-		w.got.AddNode(wantNode)
+		w.want.AddNode(wantNode)
 	}
 
 	// Compute the local plan for each resource.

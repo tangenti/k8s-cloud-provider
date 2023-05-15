@@ -199,38 +199,3 @@ func (n *nodeBase[GA, Alpha, Beta]) setResource(ur untypedResource) {
 	n.resource = r
 	n.getVer = r.Version()
 }
-
-func createPreconditions(node Node) ([]exec.Event, error) {
-	outRefs, err := node.OutRefs()
-	if err != nil {
-		return nil, err
-	}
-	var events []exec.Event
-	// Condition: references must exist before creation.
-	for _, ref := range outRefs {
-		events = append(events, exec.NewExistsEvent(ref.To))
-	}
-	return events, nil
-}
-
-func deletePreconditions(node Node) []exec.Event {
-	var ret []exec.Event
-
-	// Event: all references are removed. XXX-- this is wrong, these need to come from references in the got graph
-
-	// Condition: resource must exist. TODO: this seems to make issues
-	// ret = append(ret, exec.NewExistsEvent(node.ID()))
-	// Condition: no inRefs to the resource.
-	for _, ref := range node.InRefs() {
-		ret = append(ret, exec.NewDropRefEvent(ref.From, ref.To))
-	}
-
-	return ret
-}
-
-func updatePreconditions(node Node) []exec.Event {
-	// Update can only occur if the resource Exists TODO: is there a case where
-	// the ambient signal for existance from Update op collides with a
-	// reference to it?
-	return nil // TODO: finish me
-}

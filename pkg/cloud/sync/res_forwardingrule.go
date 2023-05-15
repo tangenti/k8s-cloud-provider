@@ -157,13 +157,13 @@ func (node *ForwardingRuleNode) Actions(got Node) ([]exec.Action, error) {
 		return opCreateActions[compute.ForwardingRule, alpha.ForwardingRule, beta.ForwardingRule](&forwardingRuleOps{}, node, node.resource)
 
 	case OpDelete:
-		return opDeleteActions[compute.ForwardingRule, alpha.ForwardingRule, beta.ForwardingRule](&forwardingRuleOps{}, node)
+		return opDeleteActions[compute.ForwardingRule, alpha.ForwardingRule, beta.ForwardingRule](&forwardingRuleOps{}, got, node)
 
 	case OpNothing:
 		return []exec.Action{exec.NewExistsEventOnlyAction(node.ID())}, nil
 
 	case OpRecreate:
-		return opRecreateActions[compute.ForwardingRule, alpha.ForwardingRule, beta.ForwardingRule](&forwardingRuleOps{}, node, node.resource)
+		return opRecreateActions[compute.ForwardingRule, alpha.ForwardingRule, beta.ForwardingRule](&forwardingRuleOps{}, got, node, node.resource)
 
 	case OpUpdate:
 		// TODO

@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
+	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/meta"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/exec"
 	"google.golang.org/api/compute/v1"
@@ -91,11 +92,12 @@ func TestLB(t *testing.T) {
 
 	mock := cloud.NewMockGCE(&cloud.SingleProjectRouter{ID: b.Project})
 
-	//mock.HealthChecks().Insert(context.Background(), meta.GlobalKey("hc"), &compute.HealthCheck{})
-	//mock.BackendServices().Insert(context.Background(), meta.GlobalKey("bs"), &compute.BackendService{})
-	//mock.TargetHttpProxies().Insert(context.Background(), meta.GlobalKey("tp"), &compute.TargetHttpProxy{
-	//	UrlMap: b.N("um").UrlMap().SelfLink(),
-	//})
+	mock.HealthChecks().Insert(context.Background(), meta.GlobalKey("hc"), &compute.HealthCheck{})
+	mock.BackendServices().Insert(context.Background(), meta.GlobalKey("bs"), &compute.BackendService{Description: "blahblah"})
+	mock.TargetHttpProxies().Insert(context.Background(), meta.GlobalKey("tp"), &compute.TargetHttpProxy{
+		UrlMap: b.N("umx").UrlMap().SelfLink(),
+	})
+	mock.UrlMaps().Insert(context.Background(), meta.GlobalKey("umx"), &compute.UrlMap{})
 
 	pl := lbPlanner{
 		cloud: mock,
@@ -111,13 +113,17 @@ func TestLB(t *testing.T) {
 		t.Logf("[PLAN] %v: %s", node.ID(), node.LocalPlan())
 	}
 
-	actions, err := graph.Actions(pl.got)
+	actions, err := graph.Actions(pl.want)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	var viz exec.VizTracer
 	ex := exec.NewSerialExecutor(actions, exec.DryRunOption(true), exec.TracerOption(&viz))
-	ex.Run(nil, nil)
+	pending, err := ex.Run(nil, nil)
+	for _, p := range pending {
+		t.Logf("%s", p.Summary())
+	}
+	t.Error(err)
 	t.Error(viz.String())
 }

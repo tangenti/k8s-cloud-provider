@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
+	"github.com/kr/pretty"
 )
 
 // Action is an operation that updates external resources.
@@ -39,6 +40,11 @@ type Action interface {
 	DryRun() []Event
 	// String returns a human-readable representation of the Action for logging.
 	String() string
+
+	// PendingEvents is the list of events that this Action is still waiting on.
+	PendingEvents() []Event
+
+	Summary() string // TODO: delete me
 }
 
 // ActionBase is a helper that implements some standard behaviors of common
@@ -50,7 +56,9 @@ type ActionBase struct {
 	Done []Event
 }
 
-func (b *ActionBase) CanRun() bool { return len(b.Want) == 0 }
+func (b *ActionBase) CanRun() bool           { return len(b.Want) == 0 }
+func (b *ActionBase) Summary() string        { return pretty.Sprint(*b) }
+func (b *ActionBase) PendingEvents() []Event { return b.Want }
 
 func (b *ActionBase) Signal(ev Event) bool {
 	for i, wantEv := range b.Want {
@@ -81,10 +89,12 @@ type eventOnlyAction struct {
 	events []Event
 }
 
-func (b *eventOnlyAction) CanRun() bool      { return true }
-func (b *eventOnlyAction) Signal(Event) bool { return false }
-func (a *eventOnlyAction) String() string    { return fmt.Sprintf("EventOnlyAction(%v)", a.events) }
-func (a *eventOnlyAction) DryRun() []Event   { return a.events }
+func (*eventOnlyAction) CanRun() bool           { return true }
+func (*eventOnlyAction) Signal(Event) bool      { return false }
+func (a *eventOnlyAction) String() string       { return fmt.Sprintf("EventOnlyAction(%v)", a.events) }
+func (*eventOnlyAction) PendingEvents() []Event { return nil }
+func (*eventOnlyAction) Summary() string        { return "XXX" }
+func (a *eventOnlyAction) DryRun() []Event      { return a.events }
 
 func (a *eventOnlyAction) Run(context.Context, cloud.Cloud) ([]Event, error) { return a.events, nil }
 
@@ -105,6 +115,7 @@ type testAction struct {
 }
 
 func (a *testAction) String() string  { return fmt.Sprintf("TestAction(%s,%v)", a.name, a.events) }
+func (a *testAction) Summary() string { return "XXX" }
 func (a *testAction) DryRun() []Event { return a.events }
 func (a *testAction) Run(context.Context, cloud.Cloud) ([]Event, error) {
 	return a.events, nil

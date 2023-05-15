@@ -24,6 +24,7 @@ import (
 
 type Tracer interface {
 	Record(entry *TraceEntry)
+	Finish(pending []Action)
 }
 
 type TraceEntry struct {
@@ -48,12 +49,26 @@ type VizTracer struct {
 }
 
 func (tr *VizTracer) Record(entry *TraceEntry) {
-	tr.buf.WriteString(fmt.Sprintf("  \"%s\"\n", entry.Action))
+	tr.buf.WriteString(fmt.Sprintf("  \"%s\" [shape=box]\n", entry.Action))
 	for _, s := range entry.Signaled {
 		tr.buf.WriteString(fmt.Sprintf("  \"%s\" -> \"%s\"\n", entry.Action, s.Event))
 		tr.buf.WriteString(fmt.Sprintf("  \"%s\" -> \"%s\"\n", s.Event, s.SignaledAction))
 	}
 	// TODO: ev needs to be named with trailing edge
+}
+
+func (tr *VizTracer) Finish(pending []Action) {
+	for _, a := range pending {
+		tr.buf.WriteString(fmt.Sprintf("  \"%s\" [shape=box,color=pink]\n", a))
+		dupe := map[string]struct{}{}
+		for _, ev := range a.PendingEvents() {
+			if _, ok := dupe[ev.String()]; !ok {
+				dupe[ev.String()] = struct{}{}
+				tr.buf.WriteString(fmt.Sprintf("  \"%s\" [color=pink]\n", ev))
+			}
+			tr.buf.WriteString(fmt.Sprintf("  \"%s\" -> \"%s\"\n", ev, a))
+		}
+	}
 }
 
 func (tr *VizTracer) String() string {

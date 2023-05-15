@@ -108,16 +108,19 @@ func (node *NetworkEndpointGroupNode) Actions(got Node) ([]exec.Action, error) {
 
 	switch op {
 	case OpCreate:
-		return opCreateActions[compute.NetworkEndpointGroup, alpha.NetworkEndpointGroup, beta.NetworkEndpointGroup](&networkEndpointGroupOps{}, node, node.resource)
+		return opCreateActions[compute.NetworkEndpointGroup, alpha.NetworkEndpointGroup, beta.NetworkEndpointGroup](
+			&networkEndpointGroupOps{}, node, node.resource)
 
 	case OpDelete:
-		return opDeleteActions[compute.NetworkEndpointGroup, alpha.NetworkEndpointGroup, beta.NetworkEndpointGroup](&networkEndpointGroupOps{}, node)
+		return opDeleteActions[compute.NetworkEndpointGroup, alpha.NetworkEndpointGroup, beta.NetworkEndpointGroup](
+			&networkEndpointGroupOps{}, got, node)
 
 	case OpNothing:
 		return []exec.Action{exec.NewExistsEventOnlyAction(node.ID())}, nil
 
 	case OpRecreate:
-		return opRecreateActions[compute.NetworkEndpointGroup, alpha.NetworkEndpointGroup, beta.NetworkEndpointGroup](&networkEndpointGroupOps{}, node, node.resource)
+		return opRecreateActions[compute.NetworkEndpointGroup, alpha.NetworkEndpointGroup, beta.NetworkEndpointGroup](
+			&networkEndpointGroupOps{}, got, node, node.resource)
 
 	case OpUpdate:
 		// TODO

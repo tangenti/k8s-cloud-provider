@@ -61,6 +61,10 @@ func (ex *serialExecutor) Run(ctx context.Context, c cloud.Cloud) ([]Action, err
 		ex.runAction(ctx, c, a)
 	}
 
+	if ex.config.Tracer != nil {
+		ex.config.Tracer.Finish(ex.pending)
+	}
+
 	return ex.pending, nil
 }
 

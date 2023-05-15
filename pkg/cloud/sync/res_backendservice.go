@@ -174,13 +174,13 @@ func (node *BackendServiceNode) Actions(got Node) ([]exec.Action, error) {
 		return opCreateActions[compute.BackendService, alpha.BackendService, beta.BackendService](&backendServiceOps{}, node, node.resource)
 
 	case OpDelete:
-		return opDeleteActions[compute.BackendService, alpha.BackendService, beta.BackendService](&backendServiceOps{}, node)
+		return opDeleteActions[compute.BackendService, alpha.BackendService, beta.BackendService](&backendServiceOps{}, got, node)
 
 	case OpNothing:
 		return []exec.Action{exec.NewExistsEventOnlyAction(node.ID())}, nil
 
 	case OpRecreate:
-		return opRecreateActions[compute.BackendService, alpha.BackendService, beta.BackendService](&backendServiceOps{}, node, node.resource)
+		return opRecreateActions[compute.BackendService, alpha.BackendService, beta.BackendService](&backendServiceOps{}, got, node, node.resource)
 
 	case OpUpdate:
 		// TODO

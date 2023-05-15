@@ -111,13 +111,13 @@ func (node *HealthCheckNode) Actions(got Node) ([]exec.Action, error) {
 		return opCreateActions[compute.HealthCheck, alpha.HealthCheck, beta.HealthCheck](&healthCheckOps{}, node, node.resource)
 
 	case OpDelete:
-		return opDeleteActions[compute.HealthCheck, alpha.HealthCheck, beta.HealthCheck](&healthCheckOps{}, node)
+		return opDeleteActions[compute.HealthCheck, alpha.HealthCheck, beta.HealthCheck](&healthCheckOps{}, got, node)
 
 	case OpNothing:
 		return []exec.Action{exec.NewExistsEventOnlyAction(node.ID())}, nil
 
 	case OpRecreate:
-		return opRecreateActions[compute.HealthCheck, alpha.HealthCheck, beta.HealthCheck](&healthCheckOps{}, node, node.resource)
+		return opRecreateActions[compute.HealthCheck, alpha.HealthCheck, beta.HealthCheck](&healthCheckOps{}, got, node, node.resource)
 
 	case OpUpdate:
 		// TODO

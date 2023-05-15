@@ -107,13 +107,13 @@ func (node *AddressNode) Actions(got Node) ([]exec.Action, error) {
 		return opCreateActions[compute.Address, alpha.Address, beta.Address](&addressOps{}, node, node.resource)
 
 	case OpDelete:
-		return opDeleteActions[compute.Address, alpha.Address, beta.Address](&addressOps{}, node)
+		return opDeleteActions[compute.Address, alpha.Address, beta.Address](&addressOps{}, got, node)
 
 	case OpNothing:
 		return []exec.Action{exec.NewExistsEventOnlyAction(node.ID())}, nil
 
 	case OpRecreate:
-		return opRecreateActions[compute.Address, alpha.Address, beta.Address](&addressOps{}, node, node.resource)
+		return opRecreateActions[compute.Address, alpha.Address, beta.Address](&addressOps{}, got, node, node.resource)
 
 	case OpUpdate:
 		// TODO

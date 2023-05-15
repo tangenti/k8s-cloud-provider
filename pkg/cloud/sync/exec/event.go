@@ -53,7 +53,7 @@ func (e *dropRefEvent) Equal(other Event) bool {
 }
 
 func (e *dropRefEvent) String() string {
-	return fmt.Sprintf("DropRef(%v => %v)\n", e.from, e.to)
+	return fmt.Sprintf("DropRef(%v => %v)", e.from, e.to)
 }
 
 // NewExistsEvent returns and event that signals that the resource ID exists.
