@@ -28,12 +28,15 @@ type Action interface {
 	// CanRun returns true if all of the Events this Action is waiting for have
 	// been signaled.
 	CanRun() bool
-	// Signal this Action with the Event that has occurred. TODO: error
-	// propagation.
-	Signal(Event)
+	// Signal this Action with the Event that has occurred.
+	// TODO: error propagation.
+	// Returns true if the Action was waiting on the Event.
+	Signal(Event) bool
 	// Run the Action, performing the operations. Returns a list of Events to
 	// signal and/or any errors that have occurred.
 	Run(context.Context, cloud.Cloud) ([]Event, error)
+	// DryRun simulates running the Action. Returns a list of Events to signal.
+	DryRun() []Event
 	// String returns a human-readable representation of the Action for logging.
 	String() string
 }
@@ -49,13 +52,16 @@ type ActionBase struct {
 
 func (b *ActionBase) CanRun() bool { return len(b.Want) == 0 }
 
-func (b *ActionBase) Signal(ev Event) {
+func (b *ActionBase) Signal(ev Event) bool {
 	for i, wantEv := range b.Want {
 		if wantEv.Equal(ev) {
 			b.Want = append(b.Want[0:i], b.Want[i+1:]...)
 			b.Done = append(b.Done, wantEv)
+
+			return true
 		}
 	}
+	return false
 }
 
 // NewExistsEventOnlyAction returns an eventOnlyAction. This Action Signals events
@@ -75,8 +81,30 @@ type eventOnlyAction struct {
 	events []Event
 }
 
-func (b *eventOnlyAction) CanRun() bool   { return true }
-func (b *eventOnlyAction) Signal(Event)   {}
-func (a *eventOnlyAction) String() string { return fmt.Sprintf("EventOnlyAction(%v)", a.events) }
+func (b *eventOnlyAction) CanRun() bool      { return true }
+func (b *eventOnlyAction) Signal(Event) bool { return false }
+func (a *eventOnlyAction) String() string    { return fmt.Sprintf("EventOnlyAction(%v)", a.events) }
+func (a *eventOnlyAction) DryRun() []Event   { return a.events }
 
 func (a *eventOnlyAction) Run(context.Context, cloud.Cloud) ([]Event, error) { return a.events, nil }
+
+func newTestAction(name string, want, events []Event) *testAction {
+	return &testAction{
+		ActionBase: ActionBase{
+			Want: want,
+		},
+		name:   name,
+		events: events,
+	}
+}
+
+type testAction struct {
+	ActionBase
+	name   string
+	events []Event
+}
+
+func (a *testAction) String() string  { return fmt.Sprintf("TestAction(%s,%v)", a.name, a.events) }
+func (a *testAction) DryRun() []Event { return a.events }
+
+func (a *testAction) Run(context.Context, cloud.Cloud) ([]Event, error) { return a.events, nil }

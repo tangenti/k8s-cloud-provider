@@ -123,7 +123,7 @@ func (node *HealthCheckNode) Actions(got Node) ([]exec.Action, error) {
 		return []exec.Action{
 			&genericDeleteAction[compute.HealthCheck, alpha.HealthCheck, beta.HealthCheck]{
 				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
+					Want: node.deletePreconditions(),
 				},
 				ops: &healthCheckOps{},
 				id:  node.ID(),
@@ -137,7 +137,7 @@ func (node *HealthCheckNode) Actions(got Node) ([]exec.Action, error) {
 		return []exec.Action{
 			&genericDeleteAction[compute.HealthCheck, alpha.HealthCheck, beta.HealthCheck]{
 				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
+					Want: node.deletePreconditions(),
 				},
 				ops: &healthCheckOps{},
 				id:  node.ID(),

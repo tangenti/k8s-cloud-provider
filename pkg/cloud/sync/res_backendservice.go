@@ -186,7 +186,7 @@ func (node *BackendServiceNode) Actions(got Node) ([]exec.Action, error) {
 		return []exec.Action{
 			&genericDeleteAction[compute.BackendService, alpha.BackendService, beta.BackendService]{
 				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
+					Want: node.deletePreconditions(),
 				},
 				ops: &backendServiceOps{},
 				id:  node.ID(),
@@ -200,7 +200,7 @@ func (node *BackendServiceNode) Actions(got Node) ([]exec.Action, error) {
 		return []exec.Action{
 			&genericDeleteAction[compute.BackendService, alpha.BackendService, beta.BackendService]{
 				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
+					Want: node.deletePreconditions(),
 				},
 				ops: &backendServiceOps{},
 				id:  node.ID(),

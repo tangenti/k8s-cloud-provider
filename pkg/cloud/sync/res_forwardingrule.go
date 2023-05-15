@@ -169,7 +169,7 @@ func (node *ForwardingRuleNode) Actions(got Node) ([]exec.Action, error) {
 		return []exec.Action{
 			&genericDeleteAction[compute.ForwardingRule, alpha.ForwardingRule, beta.ForwardingRule]{
 				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
+					Want: node.deletePreconditions(),
 				},
 				ops: &forwardingRuleOps{},
 				id:  node.ID(),
@@ -183,7 +183,7 @@ func (node *ForwardingRuleNode) Actions(got Node) ([]exec.Action, error) {
 		return []exec.Action{
 			&genericDeleteAction[compute.ForwardingRule, alpha.ForwardingRule, beta.ForwardingRule]{
 				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
+					Want: node.deletePreconditions(),
 				},
 				ops: &forwardingRuleOps{},
 				id:  node.ID(),

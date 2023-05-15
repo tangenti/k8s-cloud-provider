@@ -199,3 +199,23 @@ func (n *nodeBase[GA, Alpha, Beta]) setResource(ur untypedResource) {
 	n.resource = r
 	n.getVer = r.Version()
 }
+
+func (n *nodeBase[GA, Alpha, Beta]) deletePreconditions() []exec.Event {
+	var ret []exec.Event
+
+	// Condition: resource must exist.
+	ret = append(ret, exec.NewExistsEvent(n.ID()))
+	// Condition: no inRefs to the resource.
+	for _, ref := range n.inRefs {
+		ret = append(ret, exec.NewDropRefEvent(ref.From, ref.To))
+	}
+
+	return ret
+}
+
+func (n *nodeBase[GA, Alpha, Beta]) updatePreconditions() []exec.Event {
+	// Update can only occur if the resource Exists TODO: is there a case where
+	// the ambient signal for existance from Update op collides with a
+	// reference to it?
+	return nil // TODO: finish me
+}

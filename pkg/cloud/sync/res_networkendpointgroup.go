@@ -123,7 +123,7 @@ func (node *NetworkEndpointGroupNode) Actions(got Node) ([]exec.Action, error) {
 		return []exec.Action{
 			&genericDeleteAction[compute.NetworkEndpointGroup, alpha.NetworkEndpointGroup, beta.NetworkEndpointGroup]{
 				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
+					Want: node.deletePreconditions(),
 				},
 				ops: &networkEndpointGroupOps{},
 				id:  node.ID(),
@@ -137,7 +137,7 @@ func (node *NetworkEndpointGroupNode) Actions(got Node) ([]exec.Action, error) {
 		return []exec.Action{
 			&genericDeleteAction[compute.NetworkEndpointGroup, alpha.NetworkEndpointGroup, beta.NetworkEndpointGroup]{
 				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
+					Want: node.deletePreconditions(),
 				},
 				ops: &networkEndpointGroupOps{},
 				id:  node.ID(),

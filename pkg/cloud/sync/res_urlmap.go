@@ -146,7 +146,7 @@ func (node *UrlMapNode) Actions(got Node) ([]exec.Action, error) {
 		return []exec.Action{
 			&genericDeleteAction[compute.UrlMap, alpha.UrlMap, beta.UrlMap]{
 				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
+					Want: node.deletePreconditions(),
 				},
 				ops: &urlMapOps{},
 				id:  node.ID(),
@@ -160,7 +160,7 @@ func (node *UrlMapNode) Actions(got Node) ([]exec.Action, error) {
 		return []exec.Action{
 			&genericDeleteAction[compute.UrlMap, alpha.UrlMap, beta.UrlMap]{
 				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
+					Want: node.deletePreconditions(),
 				},
 				ops: &urlMapOps{},
 				id:  node.ID(),

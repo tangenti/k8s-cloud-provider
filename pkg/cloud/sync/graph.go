@@ -154,6 +154,8 @@ func (g *Graph) Resource(id *cloud.ResourceID) Node { return g.all[id.MapKey()] 
 
 // ComputeInRefs must be called after adding nodes to the graph to have a valid
 // InRef for resources.
+//
+// TODO: model this as a different Type to avoid misusage
 func (g *Graph) ComputeInRefs() error {
 	for _, node := range g.All() {
 		node.clearInRefs()

@@ -117,7 +117,7 @@ func (node *AddressNode) Actions(got Node) ([]exec.Action, error) {
 		return []exec.Action{
 			&genericDeleteAction[compute.Address, alpha.Address, beta.Address]{
 				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
+					Want: node.deletePreconditions(),
 				},
 				ops: &addressOps{},
 				id:  node.ID(),
@@ -131,7 +131,7 @@ func (node *AddressNode) Actions(got Node) ([]exec.Action, error) {
 		return []exec.Action{
 			&genericDeleteAction[compute.Address, alpha.Address, beta.Address]{
 				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
+					Want: node.deletePreconditions(),
 				},
 				ops: &addressOps{},
 				id:  node.ID(),

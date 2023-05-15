@@ -39,6 +39,10 @@ func (a *genericCreateAction[GA, Alpha, Beta]) Run(
 	return []exec.Event{exec.NewExistsEvent(a.id)}, err
 }
 
+func (a *genericCreateAction[GA, Alpha, Beta]) DryRun() []exec.Event {
+	return []exec.Event{exec.NewExistsEvent(a.id)}
+}
+
 func (a *genericCreateAction[GA, Alpha, Beta]) String() string {
 	return "GenericCreateAction TODO"
 }
@@ -57,21 +61,29 @@ func (a *genericDeleteAction[GA, Alpha, Beta]) Run(
 	return []exec.Event{exec.NewNotExistsEvent(a.id)}, err
 }
 
+func (a *genericDeleteAction[GA, Alpha, Beta]) DryRun() []exec.Event {
+	return []exec.Event{exec.NewNotExistsEvent(a.id)}
+}
+
 func (a *genericDeleteAction[GA, Alpha, Beta]) String() string {
 	return "GenericDeleteAction TODO"
 }
 
-type genericUpdateAction struct {
+type genericUpdateAction[GA any, Alpha any, Beta any] struct {
 	exec.ActionBase
 }
 
-func (a *genericUpdateAction) Run(
+func (a *genericUpdateAction[GA, Alpha, Beta]) Run(
 	ctx context.Context,
 	c cloud.Cloud,
 ) ([]exec.Event, error) {
 	return nil, nil
 }
 
-func (a *genericUpdateAction) String() string {
-	return "GenericUpdateAction"
+func (a *genericUpdateAction[GA, Alpha, Beta]) DryRun() []exec.Event {
+	return nil
+}
+
+func (a *genericUpdateAction[GA, Alpha, Beta]) String() string {
+	return "GenericUpdateAction TODO"
 }

@@ -144,7 +144,7 @@ func (node *TargetHttpProxyNode) Actions(got Node) ([]exec.Action, error) {
 		return []exec.Action{
 			&genericDeleteAction[compute.TargetHttpProxy, alpha.TargetHttpProxy, beta.TargetHttpProxy]{
 				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
+					Want: node.deletePreconditions(),
 				},
 				ops: &targetHttpProxyOps{},
 				id:  node.ID(),
@@ -158,7 +158,7 @@ func (node *TargetHttpProxyNode) Actions(got Node) ([]exec.Action, error) {
 		return []exec.Action{
 			&genericDeleteAction[compute.TargetHttpProxy, alpha.TargetHttpProxy, beta.TargetHttpProxy]{
 				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
+					Want: node.deletePreconditions(),
 				},
 				ops: &targetHttpProxyOps{},
 				id:  node.ID(),

@@ -15,3 +15,17 @@ limitations under the License.
 */
 
 package exec
+
+import "testing"
+
+func TestExecutor(t *testing.T) {
+	var viz VizTracer
+	exec := NewDryRunExecutor([]Action{
+		newTestAction("a", []Event{}, []Event{StringEvent("be"), StringEvent("ce")}),
+		newTestAction("b", []Event{StringEvent("be")}, []Event{StringEvent("de1")}),
+		newTestAction("c", []Event{StringEvent("ce")}, []Event{StringEvent("de2")}),
+		newTestAction("d", []Event{StringEvent("de1"), StringEvent("de2")}, []Event{}),
+	}, DryRunOption(true), TracerOption(&viz))
+	t.Error(exec.Run(nil, nil))
+	t.Error(viz.String())
+}

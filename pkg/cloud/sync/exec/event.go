@@ -94,3 +94,15 @@ func (e *notExistsEvent) Equal(other Event) bool {
 func (e *notExistsEvent) String() string {
 	return fmt.Sprintf("NotExists(%v)", e.id)
 }
+
+type StringEvent string
+
+func (e StringEvent) Equal(other Event) bool {
+	switch other := other.(type) {
+	case StringEvent:
+		return e == other
+	}
+	return false
+}
+
+func (e StringEvent) String() string { return string(e) }
