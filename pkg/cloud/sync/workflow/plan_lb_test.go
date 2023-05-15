@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
-	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/meta"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync"
+	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/exec"
 	"google.golang.org/api/compute/v1"
 )
 
@@ -91,16 +91,33 @@ func TestLB(t *testing.T) {
 
 	mock := cloud.NewMockGCE(&cloud.SingleProjectRouter{ID: b.Project})
 
-	mock.HealthChecks().Insert(context.Background(), meta.GlobalKey("hc"), &compute.HealthCheck{})
-	mock.BackendServices().Insert(context.Background(), meta.GlobalKey("bs"), &compute.BackendService{})
-	mock.TargetHttpProxies().Insert(context.Background(), meta.GlobalKey("tp"), &compute.TargetHttpProxy{
-		UrlMap: b.N("um").UrlMap().SelfLink(),
-	})
+	//mock.HealthChecks().Insert(context.Background(), meta.GlobalKey("hc"), &compute.HealthCheck{})
+	//mock.BackendServices().Insert(context.Background(), meta.GlobalKey("bs"), &compute.BackendService{})
+	//mock.TargetHttpProxies().Insert(context.Background(), meta.GlobalKey("tp"), &compute.TargetHttpProxy{
+	//	UrlMap: b.N("um").UrlMap().SelfLink(),
+	//})
 
-	err := PlanLoadBalancer(context.Background(), mock, graph)
-	if err != nil {
-		t.Fatalf("Workflow = %v, want nil", err)
+	pl := lbPlanner{
+		cloud: mock,
+		got:   sync.NewGraph(),
+		want:  graph,
+	}
+	if err := pl.plan(context.Background()); err != nil {
+		t.Fatal(err)
 	}
 
-	t.Error("x")
+	// XXX
+	for _, node := range pl.want.All() {
+		t.Logf("[PLAN] %v: %s", node.ID(), node.LocalPlan())
+	}
+
+	actions, err := graph.Actions(pl.got)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var viz exec.VizTracer
+	ex := exec.NewSerialExecutor(actions, exec.DryRunOption(true), exec.TracerOption(&viz))
+	ex.Run(nil, nil)
+	t.Error(viz.String())
 }

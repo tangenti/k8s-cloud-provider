@@ -20,7 +20,7 @@ import "testing"
 
 func TestExecutor(t *testing.T) {
 	var viz VizTracer
-	exec := NewDryRunExecutor([]Action{
+	exec := NewSerialExecutor([]Action{
 		newTestAction("a", []Event{}, []Event{StringEvent("be"), StringEvent("ce")}),
 		newTestAction("b", []Event{StringEvent("be")}, []Event{StringEvent("de1")}),
 		newTestAction("c", []Event{StringEvent("ce")}, []Event{StringEvent("de2")}),

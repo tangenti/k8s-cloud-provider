@@ -18,6 +18,7 @@ package sync
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/api"
@@ -99,7 +100,7 @@ func (a *genericCreateAction[GA, Alpha, Beta]) DryRun() []exec.Event {
 }
 
 func (a *genericCreateAction[GA, Alpha, Beta]) String() string {
-	return "GenericCreateAction TODO"
+	return fmt.Sprintf("GenericCreateAction(%v)", a.id)
 }
 
 func newGenericDeleteAction[GA any, Alpha any, Beta any](
@@ -133,7 +134,7 @@ func (a *genericDeleteAction[GA, Alpha, Beta]) DryRun() []exec.Event {
 }
 
 func (a *genericDeleteAction[GA, Alpha, Beta]) String() string {
-	return "GenericDeleteAction TODO"
+	return fmt.Sprintf("GenericDeleteAction(%v)", a.id)
 }
 
 // TODO

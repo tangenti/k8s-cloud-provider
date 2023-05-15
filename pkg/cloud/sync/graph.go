@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
+	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/exec"
 )
 
 // NewGraph returns a new empty resource graph.
@@ -151,6 +152,21 @@ func (g *Graph) All() []Node {
 
 // Resource returns the resource named by id or nil if not in the graph.
 func (g *Graph) Resource(id *cloud.ResourceID) Node { return g.all[id.MapKey()] }
+
+// Actions returns all of the actions for the Nodes in the graph. This is only
+// valid for a planned "want" graph. "got" is the graph of the prior resource
+// state.
+func (g *Graph) Actions(got *Graph) ([]exec.Action, error) {
+	var ret []exec.Action
+	for _, node := range g.All() {
+		actions, err := node.Actions(got.Resource(node.ID()))
+		if err != nil {
+			return nil, err // TODO
+		}
+		ret = append(ret, actions...)
+	}
+	return ret, nil
+}
 
 // ComputeInRefs must be called after adding nodes to the graph to have a valid
 // InRef for resources.

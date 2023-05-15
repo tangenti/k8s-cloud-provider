@@ -17,45 +17,48 @@ limitations under the License.
 package exec
 
 import (
+	"bytes"
 	"context"
-	"fmt"
 
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
 )
 
-func NewSerialExecutor(initialEvents []Event, pending []Action, opts ...ExecutorOption) Executor {
+func NewSerialExecutor(pending []Action, opts ...ExecutorOption) *serialExecutor {
 	ret := &serialExecutor{
 		pending: pending,
 	}
 	for _, opt := range opts {
 		opt(&ret.config)
 	}
+
+	if ret.config.DryRun {
+		ret.runFunc = func(ctx context.Context, c cloud.Cloud, a Action) ([]Event, error) {
+			return a.DryRun(), nil
+		}
+	} else {
+		ret.runFunc = func(ctx context.Context, c cloud.Cloud, a Action) ([]Event, error) {
+			return a.Run(ctx, c)
+		}
+	}
+
 	return ret
 }
 
 type serialExecutor struct {
-	config ExecutorConfig
-
+	config  ExecutorConfig
+	runFunc func(context.Context, cloud.Cloud, Action) ([]Event, error)
 	pending []Action
 	done    []Action
+	buf     bytes.Buffer
 }
+
+func (ex *serialExecutor) String() string { return ex.buf.String() }
 
 func (ex *serialExecutor) Run(ctx context.Context, c cloud.Cloud) ([]Action, error) {
 	ex.runEventOnly(ctx, c)
 
 	for a := ex.next(); a != nil; a = ex.next() {
-		fmt.Println("executor loop")
-
-		events, err := a.Run(ctx, c)
-		if err != nil {
-			// TODO: maybe handle propagating the error?
-			return ex.pending, err
-		}
-		ex.done = append(ex.done, a)
-		for _, ev := range events {
-			fmt.Printf("signal %s\n", ev)
-			ex.signal(ev)
-		}
+		ex.runAction(ctx, c, a)
 	}
 
 	return ex.pending, nil
@@ -66,15 +69,28 @@ func (ex *serialExecutor) runEventOnly(ctx context.Context, c cloud.Cloud) {
 	for _, a := range ex.pending {
 		switch a := a.(type) {
 		case *eventOnlyAction:
-			evs, _ := a.Run(ctx, c)
-			for _, ev := range evs {
-				ex.signal(ev)
-			}
+			ex.runAction(ctx, c, a)
 		default:
 			nonEventOnly = append(nonEventOnly, a)
 		}
 	}
 	ex.pending = nonEventOnly
+}
+
+func (ex *serialExecutor) runAction(ctx context.Context, c cloud.Cloud, a Action) {
+	te := &TraceEntry{Action: a}
+	events, err := ex.runFunc(ctx, c, a)
+	if err != nil {
+		// TODO
+	}
+	ex.done = append(ex.done, a)
+	for _, ev := range events {
+		signaled := ex.signal(ev)
+		te.Signaled = append(te.Signaled, signaled...)
+	}
+	if ex.config.Tracer != nil {
+		ex.config.Tracer.Record(te)
+	}
 }
 
 func (ex *serialExecutor) next() Action {
@@ -87,8 +103,12 @@ func (ex *serialExecutor) next() Action {
 	return nil
 }
 
-func (ex *serialExecutor) signal(ev Event) {
+func (ex *serialExecutor) signal(ev Event) []TraceSignal {
+	var ret []TraceSignal
 	for _, a := range ex.pending {
-		a.Signal(ev)
+		if a.Signal(ev) {
+			ret = append(ret, TraceSignal{Event: ev, SignaledAction: a})
+		}
 	}
+	return ret
 }
