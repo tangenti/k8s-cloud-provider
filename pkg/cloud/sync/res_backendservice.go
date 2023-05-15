@@ -171,49 +171,16 @@ func (node *BackendServiceNode) Actions(got Node) ([]exec.Action, error) {
 
 	switch op {
 	case OpCreate:
-		return []exec.Action{
-			&genericCreateAction[compute.BackendService, alpha.BackendService, beta.BackendService]{
-				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
-				},
-				ops:      &backendServiceOps{},
-				id:       node.ID(),
-				resource: node.resource,
-			},
-		}, nil
+		return opCreateActions[compute.BackendService, alpha.BackendService, beta.BackendService](&backendServiceOps{}, node, node.resource)
 
 	case OpDelete:
-		return []exec.Action{
-			&genericDeleteAction[compute.BackendService, alpha.BackendService, beta.BackendService]{
-				ActionBase: exec.ActionBase{
-					Want: node.deletePreconditions(),
-				},
-				ops: &backendServiceOps{},
-				id:  node.ID(),
-			},
-		}, nil
+		return opDeleteActions[compute.BackendService, alpha.BackendService, beta.BackendService](&backendServiceOps{}, node)
 
 	case OpNothing:
 		return []exec.Action{exec.NewExistsEventOnlyAction(node.ID())}, nil
 
 	case OpRecreate:
-		return []exec.Action{
-			&genericDeleteAction[compute.BackendService, alpha.BackendService, beta.BackendService]{
-				ActionBase: exec.ActionBase{
-					Want: node.deletePreconditions(),
-				},
-				ops: &backendServiceOps{},
-				id:  node.ID(),
-			},
-			&genericCreateAction[compute.BackendService, alpha.BackendService, beta.BackendService]{
-				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
-				},
-				ops:      &backendServiceOps{},
-				id:       node.ID(),
-				resource: node.resource,
-			},
-		}, nil
+		return opRecreateActions[compute.BackendService, alpha.BackendService, beta.BackendService](&backendServiceOps{}, node, node.resource)
 
 	case OpUpdate:
 		// TODO

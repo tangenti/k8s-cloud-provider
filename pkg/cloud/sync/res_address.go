@@ -98,53 +98,22 @@ func (node *AddressNode) Diff(gotNode Node) (*Action, error) {
 }
 
 func (node *AddressNode) Actions(got Node) ([]exec.Action, error) {
+	// TODO: got is needed for fingerprint
+
 	op := node.LocalPlan().Op()
 
 	switch op {
 	case OpCreate:
-		return []exec.Action{
-			&genericCreateAction[compute.Address, alpha.Address, beta.Address]{
-				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
-				},
-				ops:      &addressOps{},
-				id:       node.ID(),
-				resource: node.resource,
-			},
-		}, nil
+		return opCreateActions[compute.Address, alpha.Address, beta.Address](&addressOps{}, node, node.resource)
 
 	case OpDelete:
-		return []exec.Action{
-			&genericDeleteAction[compute.Address, alpha.Address, beta.Address]{
-				ActionBase: exec.ActionBase{
-					Want: node.deletePreconditions(),
-				},
-				ops: &addressOps{},
-				id:  node.ID(),
-			},
-		}, nil
+		return opDeleteActions[compute.Address, alpha.Address, beta.Address](&addressOps{}, node)
 
 	case OpNothing:
 		return []exec.Action{exec.NewExistsEventOnlyAction(node.ID())}, nil
 
 	case OpRecreate:
-		return []exec.Action{
-			&genericDeleteAction[compute.Address, alpha.Address, beta.Address]{
-				ActionBase: exec.ActionBase{
-					Want: node.deletePreconditions(),
-				},
-				ops: &addressOps{},
-				id:  node.ID(),
-			},
-			&genericCreateAction[compute.Address, alpha.Address, beta.Address]{
-				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
-				},
-				ops:      &addressOps{},
-				id:       node.ID(),
-				resource: node.resource,
-			},
-		}, nil
+		return opRecreateActions[compute.Address, alpha.Address, beta.Address](&addressOps{}, node, node.resource)
 
 	case OpUpdate:
 		// TODO

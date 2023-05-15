@@ -200,20 +200,32 @@ func (n *nodeBase[GA, Alpha, Beta]) setResource(ur untypedResource) {
 	n.getVer = r.Version()
 }
 
-func (n *nodeBase[GA, Alpha, Beta]) deletePreconditions() []exec.Event {
-	var ret []exec.Event
+func createPreconditions(node Node) ([]exec.Event, error) {
+	outRefs, err := node.OutRefs()
+	if err != nil {
+		return nil, err
+	}
+	var events []exec.Event
+	// Condition: references must exist before creation.
+	for _, ref := range outRefs {
+		events = append(events, exec.NewExistsEvent(ref.To))
+	}
+	return events, nil
+}
 
+func deletePreconditions(node Node) []exec.Event {
+	var ret []exec.Event
 	// Condition: resource must exist.
-	ret = append(ret, exec.NewExistsEvent(n.ID()))
+	ret = append(ret, exec.NewExistsEvent(node.ID()))
 	// Condition: no inRefs to the resource.
-	for _, ref := range n.inRefs {
+	for _, ref := range node.InRefs() {
 		ret = append(ret, exec.NewDropRefEvent(ref.From, ref.To))
 	}
 
 	return ret
 }
 
-func (n *nodeBase[GA, Alpha, Beta]) updatePreconditions() []exec.Event {
+func updatePreconditions(node Node) []exec.Event {
 	// Update can only occur if the resource Exists TODO: is there a case where
 	// the ambient signal for existance from Update op collides with a
 	// reference to it?

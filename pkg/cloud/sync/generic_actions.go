@@ -24,6 +24,61 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/exec"
 )
 
+func opCreateActions[GA any, Alpha any, Beta any](
+	ops genericOps[GA, Alpha, Beta],
+	node Node,
+	resource api.FrozenResource[GA, Alpha, Beta],
+) ([]exec.Action, error) {
+	events, err := createPreconditions(node)
+	if err != nil {
+		return nil, err
+	}
+	return []exec.Action{
+		newGenericCreateAction(events, ops, node.ID(), resource),
+	}, nil
+}
+
+func opDeleteActions[GA any, Alpha any, Beta any](
+	ops genericOps[GA, Alpha, Beta],
+	node Node,
+) ([]exec.Action, error) {
+	return []exec.Action{
+		newGenericDeleteAction(deletePreconditions(node), ops, node.ID()),
+	}, nil
+}
+
+func opRecreateActions[GA any, Alpha any, Beta any](
+	ops genericOps[GA, Alpha, Beta],
+	node Node,
+	resource api.FrozenResource[GA, Alpha, Beta],
+) ([]exec.Action, error) {
+	deleteAction := newGenericDeleteAction(deletePreconditions(node), ops, node.ID())
+
+	createEvents, err := createPreconditions(node)
+	if err != nil {
+		return nil, err
+	}
+	// Condition: resource must have been deleted.
+	createEvents = append(createEvents, exec.NewNotExistsEvent(node.ID()))
+	createAction := newGenericCreateAction(createEvents, ops, node.ID(), resource)
+
+	return []exec.Action{deleteAction, createAction}, nil
+}
+
+func newGenericCreateAction[GA any, Alpha any, Beta any](
+	want []exec.Event,
+	ops genericOps[GA, Alpha, Beta],
+	id *cloud.ResourceID,
+	resource api.FrozenResource[GA, Alpha, Beta],
+) *genericCreateAction[GA, Alpha, Beta] {
+	return &genericCreateAction[GA, Alpha, Beta]{
+		ActionBase: exec.ActionBase{Want: want},
+		ops:        ops,
+		id:         id,
+		resource:   resource,
+	}
+}
+
 type genericCreateAction[GA any, Alpha any, Beta any] struct {
 	exec.ActionBase
 	ops      genericOps[GA, Alpha, Beta]
@@ -45,6 +100,18 @@ func (a *genericCreateAction[GA, Alpha, Beta]) DryRun() []exec.Event {
 
 func (a *genericCreateAction[GA, Alpha, Beta]) String() string {
 	return "GenericCreateAction TODO"
+}
+
+func newGenericDeleteAction[GA any, Alpha any, Beta any](
+	want []exec.Event,
+	ops genericOps[GA, Alpha, Beta],
+	id *cloud.ResourceID,
+) *genericDeleteAction[GA, Alpha, Beta] {
+	return &genericDeleteAction[GA, Alpha, Beta]{
+		ActionBase: exec.ActionBase{Want: want},
+		ops:        ops,
+		id:         id,
+	}
 }
 
 type genericDeleteAction[GA any, Alpha any, Beta any] struct {
@@ -69,6 +136,7 @@ func (a *genericDeleteAction[GA, Alpha, Beta]) String() string {
 	return "GenericDeleteAction TODO"
 }
 
+// TODO
 type genericUpdateAction[GA any, Alpha any, Beta any] struct {
 	exec.ActionBase
 }

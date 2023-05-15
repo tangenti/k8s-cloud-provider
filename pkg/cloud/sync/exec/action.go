@@ -106,5 +106,6 @@ type testAction struct {
 
 func (a *testAction) String() string  { return fmt.Sprintf("TestAction(%s,%v)", a.name, a.events) }
 func (a *testAction) DryRun() []Event { return a.events }
-
-func (a *testAction) Run(context.Context, cloud.Cloud) ([]Event, error) { return a.events, nil }
+func (a *testAction) Run(context.Context, cloud.Cloud) ([]Event, error) {
+	return a.events, nil
+}

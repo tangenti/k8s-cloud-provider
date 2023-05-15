@@ -97,7 +97,7 @@ func TestLB(t *testing.T) {
 		UrlMap: b.N("um").UrlMap().SelfLink(),
 	})
 
-	err := LoadBalancer(context.Background(), mock, graph)
+	err := PlanLoadBalancer(context.Background(), mock, graph)
 	if err != nil {
 		t.Fatalf("Workflow = %v, want nil", err)
 	}

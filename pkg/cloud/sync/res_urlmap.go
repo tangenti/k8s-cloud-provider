@@ -131,49 +131,16 @@ func (node *UrlMapNode) Actions(got Node) ([]exec.Action, error) {
 
 	switch op {
 	case OpCreate:
-		return []exec.Action{
-			&genericCreateAction[compute.UrlMap, alpha.UrlMap, beta.UrlMap]{
-				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
-				},
-				ops:      &urlMapOps{},
-				id:       node.ID(),
-				resource: node.resource,
-			},
-		}, nil
+		return opCreateActions[compute.UrlMap, alpha.UrlMap, beta.UrlMap](&urlMapOps{}, node, node.resource)
 
 	case OpDelete:
-		return []exec.Action{
-			&genericDeleteAction[compute.UrlMap, alpha.UrlMap, beta.UrlMap]{
-				ActionBase: exec.ActionBase{
-					Want: node.deletePreconditions(),
-				},
-				ops: &urlMapOps{},
-				id:  node.ID(),
-			},
-		}, nil
+		return opDeleteActions[compute.UrlMap, alpha.UrlMap, beta.UrlMap](&urlMapOps{}, node)
 
 	case OpNothing:
 		return []exec.Action{exec.NewExistsEventOnlyAction(node.ID())}, nil
 
 	case OpRecreate:
-		return []exec.Action{
-			&genericDeleteAction[compute.UrlMap, alpha.UrlMap, beta.UrlMap]{
-				ActionBase: exec.ActionBase{
-					Want: node.deletePreconditions(),
-				},
-				ops: &urlMapOps{},
-				id:  node.ID(),
-			},
-			&genericCreateAction[compute.UrlMap, alpha.UrlMap, beta.UrlMap]{
-				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
-				},
-				ops:      &urlMapOps{},
-				id:       node.ID(),
-				resource: node.resource,
-			},
-		}, nil
+		return opRecreateActions[compute.UrlMap, alpha.UrlMap, beta.UrlMap](&urlMapOps{}, node, node.resource)
 
 	case OpUpdate:
 		// TODO

@@ -108,49 +108,16 @@ func (node *NetworkEndpointGroupNode) Actions(got Node) ([]exec.Action, error) {
 
 	switch op {
 	case OpCreate:
-		return []exec.Action{
-			&genericCreateAction[compute.NetworkEndpointGroup, alpha.NetworkEndpointGroup, beta.NetworkEndpointGroup]{
-				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
-				},
-				ops:      &networkEndpointGroupOps{},
-				id:       node.ID(),
-				resource: node.resource,
-			},
-		}, nil
+		return opCreateActions[compute.NetworkEndpointGroup, alpha.NetworkEndpointGroup, beta.NetworkEndpointGroup](&networkEndpointGroupOps{}, node, node.resource)
 
 	case OpDelete:
-		return []exec.Action{
-			&genericDeleteAction[compute.NetworkEndpointGroup, alpha.NetworkEndpointGroup, beta.NetworkEndpointGroup]{
-				ActionBase: exec.ActionBase{
-					Want: node.deletePreconditions(),
-				},
-				ops: &networkEndpointGroupOps{},
-				id:  node.ID(),
-			},
-		}, nil
+		return opDeleteActions[compute.NetworkEndpointGroup, alpha.NetworkEndpointGroup, beta.NetworkEndpointGroup](&networkEndpointGroupOps{}, node)
 
 	case OpNothing:
 		return []exec.Action{exec.NewExistsEventOnlyAction(node.ID())}, nil
 
 	case OpRecreate:
-		return []exec.Action{
-			&genericDeleteAction[compute.NetworkEndpointGroup, alpha.NetworkEndpointGroup, beta.NetworkEndpointGroup]{
-				ActionBase: exec.ActionBase{
-					Want: node.deletePreconditions(),
-				},
-				ops: &networkEndpointGroupOps{},
-				id:  node.ID(),
-			},
-			&genericCreateAction[compute.NetworkEndpointGroup, alpha.NetworkEndpointGroup, beta.NetworkEndpointGroup]{
-				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
-				},
-				ops:      &networkEndpointGroupOps{},
-				id:       node.ID(),
-				resource: node.resource,
-			},
-		}, nil
+		return opRecreateActions[compute.NetworkEndpointGroup, alpha.NetworkEndpointGroup, beta.NetworkEndpointGroup](&networkEndpointGroupOps{}, node, node.resource)
 
 	case OpUpdate:
 		// TODO

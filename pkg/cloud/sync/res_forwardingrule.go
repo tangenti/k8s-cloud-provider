@@ -154,49 +154,16 @@ func (node *ForwardingRuleNode) Actions(got Node) ([]exec.Action, error) {
 
 	switch op {
 	case OpCreate:
-		return []exec.Action{
-			&genericCreateAction[compute.ForwardingRule, alpha.ForwardingRule, beta.ForwardingRule]{
-				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
-				},
-				ops:      &forwardingRuleOps{},
-				id:       node.ID(),
-				resource: node.resource,
-			},
-		}, nil
+		return opCreateActions[compute.ForwardingRule, alpha.ForwardingRule, beta.ForwardingRule](&forwardingRuleOps{}, node, node.resource)
 
 	case OpDelete:
-		return []exec.Action{
-			&genericDeleteAction[compute.ForwardingRule, alpha.ForwardingRule, beta.ForwardingRule]{
-				ActionBase: exec.ActionBase{
-					Want: node.deletePreconditions(),
-				},
-				ops: &forwardingRuleOps{},
-				id:  node.ID(),
-			},
-		}, nil
+		return opDeleteActions[compute.ForwardingRule, alpha.ForwardingRule, beta.ForwardingRule](&forwardingRuleOps{}, node)
 
 	case OpNothing:
 		return []exec.Action{exec.NewExistsEventOnlyAction(node.ID())}, nil
 
 	case OpRecreate:
-		return []exec.Action{
-			&genericDeleteAction[compute.ForwardingRule, alpha.ForwardingRule, beta.ForwardingRule]{
-				ActionBase: exec.ActionBase{
-					Want: node.deletePreconditions(),
-				},
-				ops: &forwardingRuleOps{},
-				id:  node.ID(),
-			},
-			&genericCreateAction[compute.ForwardingRule, alpha.ForwardingRule, beta.ForwardingRule]{
-				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
-				},
-				ops:      &forwardingRuleOps{},
-				id:       node.ID(),
-				resource: node.resource,
-			},
-		}, nil
+		return opRecreateActions[compute.ForwardingRule, alpha.ForwardingRule, beta.ForwardingRule](&forwardingRuleOps{}, node, node.resource)
 
 	case OpUpdate:
 		// TODO

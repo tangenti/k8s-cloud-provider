@@ -25,9 +25,9 @@ import (
 	"k8s.io/klog/v2"
 )
 
-// LoadBalancer will perform updates to cloud resources wanted in graph.
-func LoadBalancer(ctx context.Context, c cloud.Cloud, graph *sync.Graph) error {
-	w := lbWorkflow{
+// PlanLoadBalancer will perform updates to cloud resources wanted in graph.
+func PlanLoadBalancer(ctx context.Context, c cloud.Cloud, graph *sync.Graph) error {
+	w := lbPlanner{
 		cloud: c,
 		got:   sync.NewGraph(),
 		want:  graph,
@@ -41,16 +41,16 @@ func LoadBalancer(ctx context.Context, c cloud.Cloud, graph *sync.Graph) error {
 		klog.Infof("[PLAN] %v: %s", node.ID(), node.LocalPlan())
 	}
 
-	return w.execute(ctx)
+	return nil
 }
 
-type lbWorkflow struct {
+type lbPlanner struct {
 	cloud cloud.Cloud
 	got   *sync.Graph
 	want  *sync.Graph
 }
 
-func (w *lbWorkflow) plan(ctx context.Context) error {
+func (w *lbPlanner) plan(ctx context.Context) error {
 	// Assemble the "got" graph. This will get the current state of any
 	// resources and also enumerate any resouces that are currently linked that
 	// are not in the "want" graph.
@@ -94,7 +94,7 @@ func (w *lbWorkflow) plan(ctx context.Context) error {
 
 // propagateRecreates through inbound references. If a resource needs to be
 // recreated, this means any references will also be affected transitively.
-func (w *lbWorkflow) propagateRecreates() error {
+func (w *lbPlanner) propagateRecreates() error {
 	var recreateNodes []sync.Node
 	for _, node := range w.want.All() {
 		if node.LocalPlan().Op() == sync.OpRecreate {
@@ -128,7 +128,7 @@ func (w *lbWorkflow) propagateRecreates() error {
 	return nil
 }
 
-func (w *lbWorkflow) sanityCheck() error {
+func (w *lbPlanner) sanityCheck() error {
 	w.want.ComputeInRefs()
 	for _, node := range w.want.All() {
 		switch node.LocalPlan().Op() {
@@ -148,7 +148,8 @@ func (w *lbWorkflow) sanityCheck() error {
 	return nil
 }
 
-func (w *lbWorkflow) execute(ctx context.Context) error {
+/*
+func (w *lbPlanner) execute(ctx context.Context) error {
 	// TODO
 	// Create or update BackendServices, HealthChecks. Each BS can be done in
 	// parallel.
@@ -158,3 +159,4 @@ func (w *lbWorkflow) execute(ctx context.Context) error {
 	// rather than implementing a full-featured task graph from the outset.
 	return nil
 }
+*/

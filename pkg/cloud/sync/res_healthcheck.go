@@ -108,49 +108,16 @@ func (node *HealthCheckNode) Actions(got Node) ([]exec.Action, error) {
 
 	switch op {
 	case OpCreate:
-		return []exec.Action{
-			&genericCreateAction[compute.HealthCheck, alpha.HealthCheck, beta.HealthCheck]{
-				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
-				},
-				ops:      &healthCheckOps{},
-				id:       node.ID(),
-				resource: node.resource,
-			},
-		}, nil
+		return opCreateActions[compute.HealthCheck, alpha.HealthCheck, beta.HealthCheck](&healthCheckOps{}, node, node.resource)
 
 	case OpDelete:
-		return []exec.Action{
-			&genericDeleteAction[compute.HealthCheck, alpha.HealthCheck, beta.HealthCheck]{
-				ActionBase: exec.ActionBase{
-					Want: node.deletePreconditions(),
-				},
-				ops: &healthCheckOps{},
-				id:  node.ID(),
-			},
-		}, nil
+		return opDeleteActions[compute.HealthCheck, alpha.HealthCheck, beta.HealthCheck](&healthCheckOps{}, node)
 
 	case OpNothing:
 		return []exec.Action{exec.NewExistsEventOnlyAction(node.ID())}, nil
 
 	case OpRecreate:
-		return []exec.Action{
-			&genericDeleteAction[compute.HealthCheck, alpha.HealthCheck, beta.HealthCheck]{
-				ActionBase: exec.ActionBase{
-					Want: node.deletePreconditions(),
-				},
-				ops: &healthCheckOps{},
-				id:  node.ID(),
-			},
-			&genericCreateAction[compute.HealthCheck, alpha.HealthCheck, beta.HealthCheck]{
-				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
-				},
-				ops:      &healthCheckOps{},
-				id:       node.ID(),
-				resource: node.resource,
-			},
-		}, nil
+		return opRecreateActions[compute.HealthCheck, alpha.HealthCheck, beta.HealthCheck](&healthCheckOps{}, node, node.resource)
 
 	case OpUpdate:
 		// TODO

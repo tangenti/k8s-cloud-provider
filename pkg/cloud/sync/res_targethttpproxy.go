@@ -129,49 +129,16 @@ func (node *TargetHttpProxyNode) Actions(got Node) ([]exec.Action, error) {
 
 	switch op {
 	case OpCreate:
-		return []exec.Action{
-			&genericCreateAction[compute.TargetHttpProxy, alpha.TargetHttpProxy, beta.TargetHttpProxy]{
-				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
-				},
-				ops:      &targetHttpProxyOps{},
-				id:       node.ID(),
-				resource: node.resource,
-			},
-		}, nil
+		return opCreateActions[compute.TargetHttpProxy, alpha.TargetHttpProxy, beta.TargetHttpProxy](&targetHttpProxyOps{}, node, node.resource)
 
 	case OpDelete:
-		return []exec.Action{
-			&genericDeleteAction[compute.TargetHttpProxy, alpha.TargetHttpProxy, beta.TargetHttpProxy]{
-				ActionBase: exec.ActionBase{
-					Want: node.deletePreconditions(),
-				},
-				ops: &targetHttpProxyOps{},
-				id:  node.ID(),
-			},
-		}, nil
+		return opDeleteActions[compute.TargetHttpProxy, alpha.TargetHttpProxy, beta.TargetHttpProxy](&targetHttpProxyOps{}, node)
 
 	case OpNothing:
 		return []exec.Action{exec.NewExistsEventOnlyAction(node.ID())}, nil
 
 	case OpRecreate:
-		return []exec.Action{
-			&genericDeleteAction[compute.TargetHttpProxy, alpha.TargetHttpProxy, beta.TargetHttpProxy]{
-				ActionBase: exec.ActionBase{
-					Want: node.deletePreconditions(),
-				},
-				ops: &targetHttpProxyOps{},
-				id:  node.ID(),
-			},
-			&genericCreateAction[compute.TargetHttpProxy, alpha.TargetHttpProxy, beta.TargetHttpProxy]{
-				ActionBase: exec.ActionBase{
-					Want: nil, // TODO
-				},
-				ops:      &targetHttpProxyOps{},
-				id:       node.ID(),
-				resource: node.resource,
-			},
-		}, nil
+		return opRecreateActions[compute.TargetHttpProxy, alpha.TargetHttpProxy, beta.TargetHttpProxy](&targetHttpProxyOps{}, node, node.resource)
 
 	case OpUpdate:
 		// TODO
