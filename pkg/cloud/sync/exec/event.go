@@ -25,7 +25,9 @@ import (
 // Event is triggered during execution, signalling that dependent Actions can
 // become possible to run.
 type Event interface {
+	// Equal returns true if this event is == to other.
 	Equal(other Event) bool
+	// String implements Stringer.
 	String() string
 	// TODO: handle errors
 	// MapKey() string for a more efficient implementation
@@ -95,6 +97,8 @@ func (e *notExistsEvent) String() string {
 	return fmt.Sprintf("NotExists(%v)", e.id)
 }
 
+// StringEvent is an Event identified by a string. This is an easy way to create
+// custom events.
 type StringEvent string
 
 func (e StringEvent) Equal(other Event) bool {

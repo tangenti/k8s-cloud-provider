@@ -17,30 +17,18 @@ limitations under the License.
 package sync
 
 import (
+	"fmt"
+
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/api"
-	"github.com/kr/pretty"
 )
 
-// Plan for what will be done to the Node.
-type Plan struct {
+// NodePlan for what will be done to the Node.
+type NodePlan struct {
 	operation Operation
 	// action is a history of Actions that were planned, including previous
 	// values Set().
-	action []Action
+	action []PlanAction
 }
-
-// Op to perform.
-func (p *Plan) Op() Operation { return p.operation }
-
-// Set the plan to the specified action.
-func (p *Plan) Set(a Action) {
-	// TODO: this needs to change the set of actions.
-	p.operation = a.Operation
-	// Save the pervious actions for debugging.
-	p.action = append(p.action, a)
-}
-
-func (p *Plan) String() string { return pretty.Sprint(p.action) }
 
 // Operation to perform on the Node.
 type Operation string
@@ -63,9 +51,9 @@ var (
 	OpDelete Operation = "Delete"
 )
 
-// Action is a human-readable reasons describing the Sync
+// PlanAction is a human-readable reasons describing the Sync
 // operation that has been planned.
-type Action struct {
+type PlanAction struct {
 	// Operation associated with this explanation.
 	Operation Operation
 	// Why is a human readable string describing why this
@@ -74,4 +62,43 @@ type Action struct {
 	// Diff is an optional description of the diff between the
 	// current and wanted resources.
 	Diff *api.DiffResult
+}
+
+// Op to perform.
+func (p *NodePlan) Op() Operation { return p.operation }
+
+// Set the plan to the specified action.
+func (p *NodePlan) Set(a PlanAction) {
+	// TODO: this needs to change the set of actions.
+	p.operation = a.Operation
+	// Save the pervious actions for debugging.
+	p.action = append(p.action, a)
+}
+
+func (p *NodePlan) String() string {
+	if p == nil || len(p.action) == 0 {
+		return "no plan"
+	}
+	curAction := p.action[len(p.action)-1]
+	return fmt.Sprintf("%+v", curAction)
+}
+
+// GraphvizString returns a Graphviz compatible summary of the plan.
+func (p *NodePlan) GraphvizString() string {
+	if p == nil || len(p.action) == 0 {
+		return "no plan"
+	}
+	curAction := p.action[len(p.action)-1]
+	var s string
+	s += fmt.Sprintf("%s: %s", p.operation, curAction.Why)
+	if curAction.Diff != nil {
+		if len(curAction.Diff.Items) > 0 {
+			s += "<br/>"
+		}
+		for _, item := range curAction.Diff.Items {
+			s += fmt.Sprintf("[DIFF] %s: %s<br/>", item.State, item.Path)
+		}
+	}
+
+	return s
 }

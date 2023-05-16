@@ -124,7 +124,7 @@ func (w *lbPlanner) propagateRecreates() error {
 			case sync.OpUpdate:
 				fallthrough
 			case sync.OpNothing:
-				node.LocalPlan().Set(sync.Action{
+				node.LocalPlan().Set(sync.PlanAction{
 					Operation: sync.OpRecreate,
 					Why:       fmt.Sprintf("Dependency %v is being recreated", node.ID()),
 				})
@@ -153,16 +153,3 @@ func (w *lbPlanner) sanityCheck() error {
 	}
 	return nil
 }
-
-/*
-func (w *lbPlanner) execute(ctx context.Context) error {
-	// TODO
-	// Create or update BackendServices, HealthChecks. Each BS can be done in
-	// parallel.
-	//
-	// Create/update the rest of the hierarchy. It is preferred to write this
-	// first using a single-threaded code and then add parallelism in stages
-	// rather than implementing a full-featured task graph from the outset.
-	return nil
-}
-*/

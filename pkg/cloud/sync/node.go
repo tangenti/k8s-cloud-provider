@@ -98,11 +98,11 @@ type Node interface {
 
 	// Diff this node (want) with the state of the Node (got). This computes
 	// whether the Sync operation will be an update or recreation.
-	Diff(got Node) (*Action, error)
+	Diff(got Node) (*PlanAction, error)
 
 	// LocalPlan returns the plan for updating this Node. This will be nil for
 	// graphs that have not been planned.
-	LocalPlan() *Plan
+	LocalPlan() *NodePlan
 
 	// Actions needed to perform the plan. This will be empty for graphs that
 	// have not been planned. "got" is the current state of the Node in the
@@ -155,7 +155,7 @@ type nodeBase[GA any, Alpha any, Beta any] struct {
 	// getVer determines the Version of the resource to get from Cloud.
 	getVer meta.Version
 	// plan is only set in the "want" graph.
-	plan Plan
+	plan NodePlan
 }
 
 func (n *nodeBase[GA, Alpha, Beta]) Resource() api.FrozenResource[GA, Alpha, Beta] { return n.resource }
@@ -169,7 +169,7 @@ func (n *nodeBase[GA, Alpha, Beta]) SetOwnership(o OwnershipStatus) { n.ownershi
 func (n *nodeBase[GA, Alpha, Beta]) InRefs() []ResourceRef          { return n.inRefs }
 func (n *nodeBase[GA, Alpha, Beta]) GetErr() error                  { return n.getErr }
 func (n *nodeBase[GA, Alpha, Beta]) Sprint() string                 { return pretty.Sprint(n) }
-func (n *nodeBase[GA, Alpha, Beta]) LocalPlan() *Plan               { return &n.plan }
+func (n *nodeBase[GA, Alpha, Beta]) LocalPlan() *NodePlan           { return &n.plan }
 
 func (n *nodeBase[GA, Alpha, Beta]) init(id *cloud.ResourceID, tt api.TypeTrait[GA, Alpha, Beta]) {
 	n.id = id

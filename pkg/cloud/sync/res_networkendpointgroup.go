@@ -77,7 +77,7 @@ func (node *NetworkEndpointGroupNode) NewEmptyNode() Node {
 	return ret
 }
 
-func (node *NetworkEndpointGroupNode) Diff(gotNode Node) (*Action, error) {
+func (node *NetworkEndpointGroupNode) Diff(gotNode Node) (*PlanAction, error) {
 	got, ok := gotNode.(*NetworkEndpointGroupNode)
 	if !ok {
 		return nil, fmt.Errorf("NetworkEndpointGroupNode: invalid type to Diff: %T", gotNode)
@@ -90,14 +90,14 @@ func (node *NetworkEndpointGroupNode) Diff(gotNode Node) (*Action, error) {
 
 	if diff.HasDiff() {
 		// TODO: handle set labels with an update operation.
-		return &Action{
+		return &PlanAction{
 			Operation: OpRecreate,
 			Why:       "NetworkEndpointGroup needs to be recreated (no update method exists)",
 			Diff:      diff,
 		}, nil
 	}
 
-	return &Action{
+	return &PlanAction{
 		Operation: OpNothing,
 		Why:       "No diff between got and want",
 	}, nil

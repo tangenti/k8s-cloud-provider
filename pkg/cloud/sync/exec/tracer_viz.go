@@ -22,22 +22,6 @@ import (
 	"sync/atomic"
 )
 
-type Tracer interface {
-	Record(entry *TraceEntry)
-	Finish(pending []Action)
-}
-
-type TraceEntry struct {
-	Action   Action
-	Err      error
-	Signaled []TraceSignal
-}
-
-type TraceSignal struct {
-	Event          Event
-	SignaledAction Action
-}
-
 func NewVizTracer() *VizTracer {
 	ret := &VizTracer{}
 	return ret

@@ -123,7 +123,7 @@ func (node *ForwardingRuleNode) NewEmptyNode() Node {
 	return ret
 }
 
-func (node *ForwardingRuleNode) Diff(gotNode Node) (*Action, error) {
+func (node *ForwardingRuleNode) Diff(gotNode Node) (*PlanAction, error) {
 	got, ok := gotNode.(*ForwardingRuleNode)
 	if !ok {
 		return nil, fmt.Errorf("ForwardingRuleNode: invalid type to Diff: %T", gotNode)
@@ -136,14 +136,14 @@ func (node *ForwardingRuleNode) Diff(gotNode Node) (*Action, error) {
 
 	if !diff.HasDiff() {
 		// TODO:
-		return &Action{
+		return &PlanAction{
 			Operation: OpRecreate,
 			Why:       "ForwardingRule needs to be recreated (no update method exists)",
 			Diff:      diff,
 		}, nil
 	}
 
-	return &Action{
+	return &PlanAction{
 		Operation: OpNothing,
 		Why:       "No diff between got and want",
 	}, nil

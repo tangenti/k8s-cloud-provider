@@ -93,7 +93,7 @@ func (node *fakeNode) NewEmptyNode() Node {
 	return ret
 }
 
-func (node *fakeNode) Diff(gotNode Node) (*Action, error) {
+func (node *fakeNode) Diff(gotNode Node) (*PlanAction, error) {
 	got, ok := gotNode.(*fakeNode)
 	if !ok {
 		return nil, fmt.Errorf("FakeNode: invalid type to Diff: %T", gotNode)
@@ -103,7 +103,7 @@ func (node *fakeNode) Diff(gotNode Node) (*Action, error) {
 		return nil, fmt.Errorf("FakeNode: invalid type to Diff: %T", gotNode)
 	}
 	if !diff.HasDiff() {
-		return &Action{
+		return &PlanAction{
 			Operation: OpNothing,
 			Why:       "No diff between got and want",
 		}, nil
@@ -111,7 +111,7 @@ func (node *fakeNode) Diff(gotNode Node) (*Action, error) {
 
 	// TODO: handle set labels with an update operation.
 
-	return &Action{
+	return &PlanAction{
 		Operation: OpRecreate,
 		Why:       "Fake needs to be recreated (no update method exists)",
 	}, nil

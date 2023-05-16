@@ -71,7 +71,7 @@ func (node *AddressNode) NewEmptyNode() Node {
 	return ret
 }
 
-func (node *AddressNode) Diff(gotNode Node) (*Action, error) {
+func (node *AddressNode) Diff(gotNode Node) (*PlanAction, error) {
 	got, ok := gotNode.(*AddressNode)
 	if !ok {
 		return nil, fmt.Errorf("AddressNode: invalid type to Diff: %T", gotNode)
@@ -84,14 +84,14 @@ func (node *AddressNode) Diff(gotNode Node) (*Action, error) {
 
 	if diff.HasDiff() {
 		// TODO: handle set labels with an update operation.
-		return &Action{
+		return &PlanAction{
 			Operation: OpRecreate,
 			Why:       "Address needs to be recreated (no update method exists)",
 			Diff:      diff,
 		}, nil
 	}
 
-	return &Action{
+	return &PlanAction{
 		Operation: OpNothing,
 		Why:       "No diff between got and want",
 	}, nil

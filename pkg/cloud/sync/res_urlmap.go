@@ -100,7 +100,7 @@ func (node *UrlMapNode) NewEmptyNode() Node {
 	return ret
 }
 
-func (node *UrlMapNode) Diff(gotNode Node) (*Action, error) {
+func (node *UrlMapNode) Diff(gotNode Node) (*PlanAction, error) {
 	got, ok := gotNode.(*UrlMapNode)
 	if !ok {
 		return nil, fmt.Errorf("UrlMapNode: invalid type to Diff: %T", gotNode)
@@ -113,14 +113,14 @@ func (node *UrlMapNode) Diff(gotNode Node) (*Action, error) {
 
 	if !diff.HasDiff() {
 		// TODO: handle set labels with an update operation.
-		return &Action{
+		return &PlanAction{
 			Operation: OpRecreate,
 			Why:       "UrlMap needs to be recreated (no update method exists)",
 			Diff:      diff,
 		}, nil
 	}
 
-	return &Action{
+	return &PlanAction{
 		Operation: OpNothing,
 		Why:       "No diff between got and want",
 	}, nil

@@ -18,6 +18,7 @@ package workflow
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
@@ -97,8 +98,8 @@ func TestLB(t *testing.T) {
 	mock.TargetHttpProxies().Insert(context.Background(), meta.GlobalKey("tp"), &compute.TargetHttpProxy{
 		UrlMap: b.N("umx").UrlMap().SelfLink(),
 	})
-	mock.UrlMaps().Insert(context.Background(), meta.GlobalKey("umx"), &compute.UrlMap{})
 
+	mock.UrlMaps().Insert(context.Background(), meta.GlobalKey("umx"), &compute.UrlMap{})
 	pl := lbPlanner{
 		cloud: mock,
 		got:   sync.NewGraph(),
@@ -113,7 +114,7 @@ func TestLB(t *testing.T) {
 		t.Logf("[PLAN] %v: %s", node.ID(), node.LocalPlan())
 	}
 
-	actions, err := graph.Actions(pl.want)
+	actions, err := graph.Actions(pl.got)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -126,4 +127,7 @@ func TestLB(t *testing.T) {
 	}
 	t.Error(err)
 	t.Error(viz.String())
+
+	fmt.Println("got", sync.Graphviz(pl.got))
+	fmt.Println("want", sync.Graphviz(pl.want))
 }
