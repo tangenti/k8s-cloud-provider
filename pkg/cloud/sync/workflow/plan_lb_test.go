@@ -100,7 +100,7 @@ func TestLB(t *testing.T) {
 	})
 
 	mock.UrlMaps().Insert(context.Background(), meta.GlobalKey("umx"), &compute.UrlMap{})
-	pl := lbPlanner{
+	pl := syncPlanner{
 		cloud: mock,
 		got:   sync.NewGraph(),
 		want:  graph,
