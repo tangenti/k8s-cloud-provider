@@ -22,6 +22,8 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
 )
 
+// NewNodeByID creates a new concrete Node type matching the resource ID. The
+// Node will be empty of values.
 func NewNodeByID(id *cloud.ResourceID, na NodeAttributes) (Node, error) {
 	var node Node
 
@@ -49,7 +51,9 @@ func NewNodeByID(id *cloud.ResourceID, na NodeAttributes) (Node, error) {
 	return node, nil
 }
 
-func ResourceOutRefs(res any) ([]ResourceRef, error) {
+// ResourceOutRefs is a convenience wrapper for dispatching to the appropriate
+// OutRefs for the resource type.
+func ResourceOutRefs(res untypedResource) ([]ResourceRef, error) {
 	switch res := res.(type) {
 	case Address:
 		return AddressOutRefs(res)

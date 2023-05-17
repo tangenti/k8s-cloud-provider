@@ -140,7 +140,7 @@ func (node *BackendServiceNode) NewEmptyNode() Node {
 	return ret
 }
 
-func (node *BackendServiceNode) Diff(gotNode Node) (*PlanAction, error) {
+func (node *BackendServiceNode) Diff(gotNode Node) (*PlanDetails, error) {
 	got, ok := gotNode.(*BackendServiceNode)
 	if !ok {
 		return nil, fmt.Errorf("BackendServiceNode: invalid type to Diff: %T", gotNode)
@@ -153,14 +153,14 @@ func (node *BackendServiceNode) Diff(gotNode Node) (*PlanAction, error) {
 
 	if diff.HasDiff() {
 		// TODO: XXX
-		return &PlanAction{
+		return &PlanDetails{
 			Operation: OpRecreate,
 			Why:       "BackendService needs to be recreated (no update method exists)",
 			Diff:      diff,
 		}, nil
 	}
 
-	return &PlanAction{
+	return &PlanDetails{
 		Operation: OpNothing,
 		Why:       "No diff between got and want",
 	}, nil

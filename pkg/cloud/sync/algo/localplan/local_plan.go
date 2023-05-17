@@ -68,7 +68,7 @@ func (p *planner) preconditions() error {
 
 func (p *planner) localPlan(gotNode, wantNode sync.Node) error {
 	if wantNode.Ownership() != sync.OwnershipManaged {
-		wantNode.LocalPlan().Set(sync.PlanAction{
+		wantNode.LocalPlan().Set(sync.PlanDetails{
 			Operation: sync.OpNothing,
 			Why:       "Node is not managed",
 		})
@@ -87,19 +87,19 @@ func (p *planner) localPlan(gotNode, wantNode sync.Node) error {
 		wantNode.LocalPlan().Set(*action)
 
 	case s{sync.NodeExists, sync.NodeDoesNotExist}:
-		wantNode.LocalPlan().Set(sync.PlanAction{
+		wantNode.LocalPlan().Set(sync.PlanDetails{
 			Operation: sync.OpDelete,
 			Why:       "Node doesn't exist in want, but exists in got",
 		})
 
 	case s{sync.NodeDoesNotExist, sync.NodeExists}:
-		wantNode.LocalPlan().Set(sync.PlanAction{
+		wantNode.LocalPlan().Set(sync.PlanDetails{
 			Operation: sync.OpCreate,
 			Why:       "Node doesn't exist in got, but exists in want",
 		})
 
 	case s{sync.NodeDoesNotExist, sync.NodeDoesNotExist}:
-		wantNode.LocalPlan().Set(sync.PlanAction{
+		wantNode.LocalPlan().Set(sync.PlanDetails{
 			Operation: sync.OpNothing,
 			Why:       "Node does not exist",
 		})

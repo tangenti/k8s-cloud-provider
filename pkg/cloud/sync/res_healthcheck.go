@@ -77,7 +77,7 @@ func (node *HealthCheckNode) NewEmptyNode() Node {
 	return ret
 }
 
-func (node *HealthCheckNode) Diff(gotNode Node) (*PlanAction, error) {
+func (node *HealthCheckNode) Diff(gotNode Node) (*PlanDetails, error) {
 	got, ok := gotNode.(*HealthCheckNode)
 	if !ok {
 		return nil, fmt.Errorf("HealthCheckNode: invalid type to Diff: %T", gotNode)
@@ -90,14 +90,14 @@ func (node *HealthCheckNode) Diff(gotNode Node) (*PlanAction, error) {
 
 	if diff.HasDiff() {
 		// TODO: handle set labels with an update operation.
-		return &PlanAction{
+		return &PlanDetails{
 			Operation: OpRecreate,
 			Why:       "HealthCheck needs to be recreated (no update method exists)",
 			Diff:      diff,
 		}, nil
 	}
 
-	return &PlanAction{
+	return &PlanDetails{
 		Operation: OpNothing,
 		Why:       "No diff between got and want",
 	}, nil

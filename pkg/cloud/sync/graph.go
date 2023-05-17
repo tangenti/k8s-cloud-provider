@@ -23,6 +23,8 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/exec"
 )
 
+const graphErrPrefix = "Graph"
+
 // NewGraph returns a new empty resource graph.
 func NewGraph() *Graph {
 	ret := &Graph{
@@ -53,61 +55,85 @@ type Graph struct {
 	urlMap               map[cloud.ResourceMapKey]*UrlMapNode
 }
 
+// newNodeFromResource is a helper method to create a new node of the right
+// specific type.
+func newNodeFromResource[N Node, R untypedResource](
+	newNode func(newFunc *cloud.ResourceID) N,
+	resource R,
+	na NodeAttributes,
+) N {
+	node := newNode(resource.ResourceID())
+	node.setResource(resource)
+	node.setAttributes(na)
+	node.setVersion(resource.Version())
+
+	return node
+}
+
 func (g *Graph) AddAddress(res Address, na NodeAttributes) *AddressNode {
 	node := newNodeFromResource(newAddressNode, res, na)
 	g.AddNode(node)
-
 	return node
 }
 
 func (g *Graph) AddBackendService(res BackendService, na NodeAttributes) *BackendServiceNode {
 	node := newNodeFromResource(newBackendServiceNode, res, na)
 	g.AddNode(node)
-
 	return node
 }
 
 func (g *Graph) AddForwardingRule(res ForwardingRule, na NodeAttributes) *ForwardingRuleNode {
 	node := newNodeFromResource(newForwardingRuleNode, res, na)
 	g.AddNode(node)
-
 	return node
 }
 
 func (g *Graph) AddHealthCheck(res HealthCheck, na NodeAttributes) *HealthCheckNode {
 	node := newNodeFromResource(newHealthCheckNode, res, na)
 	g.AddNode(node)
-
 	return node
 }
 
 func (g *Graph) AddNetworkEndpointGroup(res NetworkEndpointGroup, na NodeAttributes) *NetworkEndpointGroupNode {
 	node := newNodeFromResource(newNetworkEndpointGroupNode, res, na)
 	g.AddNode(node)
-
 	return node
 }
 
 func (g *Graph) AddTargetHttpProxy(res TargetHttpProxy, na NodeAttributes) *TargetHttpProxyNode {
 	node := newNodeFromResource(newTargetHttpProxyNode, res, na)
 	g.AddNode(node)
-
 	return node
 }
 
 func (g *Graph) AddUrlMap(res UrlMap, na NodeAttributes) *UrlMapNode {
 	node := newNodeFromResource(newUrlMapNode, res, na)
 	g.AddNode(node)
-
 	return node
 }
 
 func (g *Graph) addFake(res fake, na NodeAttributes) *fakeNode {
 	node := newNodeFromResource(newFakeNode, res, na)
 	g.AddNode(node)
-
 	return node
 }
+
+// Accessors for the resources.
+func (g *Graph) Address(id *cloud.ResourceID) *AddressNode { return g.address[id.MapKey()] }
+func (g *Graph) BackendService(id *cloud.ResourceID) *BackendServiceNode {
+	return g.backendService[id.MapKey()]
+}
+func (g *Graph) ForwardingRule(id *cloud.ResourceID) *ForwardingRuleNode {
+	return g.forwardingRule[id.MapKey()]
+}
+func (g *Graph) HealthCheck(id *cloud.ResourceID) *HealthCheckNode { return g.healthCheck[id.MapKey()] }
+func (g *Graph) NetworkEndpointGroup(id *cloud.ResourceID) *NetworkEndpointGroupNode {
+	return g.networkEndpointGroup[id.MapKey()]
+}
+func (g *Graph) TargetHttpProxy(id *cloud.ResourceID) *TargetHttpProxyNode {
+	return g.targetHttpProxy[id.MapKey()]
+}
+func (g *Graph) UrlMap(id *cloud.ResourceID) *UrlMapNode { return g.urlMap[id.MapKey()] }
 
 // AddNode adds a node to the graph.
 func (g *Graph) AddNode(node Node) error {
@@ -172,7 +198,7 @@ func (g *Graph) Actions(got *Graph) ([]exec.Action, error) {
 	for _, node := range g.All() {
 		actions, err := node.Actions(got.Resource(node.ID()))
 		if err != nil {
-			return nil, err // TODO
+			return nil, err
 		}
 		ret = append(ret, actions...)
 	}
@@ -195,7 +221,7 @@ func (g *Graph) ComputeInRefs() error {
 		for _, ref := range refs {
 			toNode, ok := g.all[ref.To.MapKey()]
 			if !ok {
-				return fmt.Errorf("Graph: missing outRef: %s points to %s which isn't in the graph", fromNode.ID(), toNode.ID())
+				return fmt.Errorf("%s: missing outRef: %s points to %s which isn't in the graph", graphErrPrefix, fromNode.ID(), toNode.ID())
 			}
 			toNode.addInRef(ref)
 		}
@@ -208,11 +234,11 @@ func (g *Graph) Validate() error {
 	for _, n := range g.all {
 		// No nodes have OwnershipUnknown
 		if n.Ownership() == OwnershipUnknown {
-			return fmt.Errorf("Graph: node %s has ownership %s", n.ID(), n.Ownership())
+			return fmt.Errorf("%s: node %s has ownership %s", graphErrPrefix, n.ID(), n.Ownership())
 		}
 		// ResourceID is not mismatched
 		if !n.unTypedResource().ResourceID().Equal(n.ID()) {
-			return fmt.Errorf("Graph: node and resource id mismatch (node=%v, id=%v)", n.ID(), n.unTypedResource().ResourceID())
+			return fmt.Errorf("%s: node and resource id mismatch (node=%v, id=%v)", graphErrPrefix, n.ID(), n.unTypedResource().ResourceID())
 		}
 	}
 	// All resources have their dependencies in the graph if they are OwnershipManaged.
@@ -226,7 +252,7 @@ func (g *Graph) Validate() error {
 		}
 		for _, d := range deps {
 			if _, ok := g.all[d.To.MapKey()]; !ok {
-				return fmt.Errorf("Graph: missing outRef: %v points to %v which isn't in the graph", n.ID(), d.To)
+				return fmt.Errorf("%s: missing outRef: %v points to %v which isn't in the graph", graphErrPrefix, n.ID(), d.To)
 			}
 		}
 	}

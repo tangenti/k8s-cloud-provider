@@ -22,12 +22,12 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/api"
 )
 
-// NodePlan for what will be done to the Node.
-type NodePlan struct {
+// LocalPlan for what will be done to the Node.
+type LocalPlan struct {
 	operation Operation
 	// action is a history of Actions that were planned, including previous
 	// values Set().
-	action []PlanAction
+	action []PlanDetails
 }
 
 // Operation to perform on the Node.
@@ -51,9 +51,9 @@ var (
 	OpDelete Operation = "Delete"
 )
 
-// PlanAction is a human-readable reasons describing the Sync
+// PlanDetails is a human-readable reasons describing the Sync
 // operation that has been planned.
-type PlanAction struct {
+type PlanDetails struct {
 	// Operation associated with this explanation.
 	Operation Operation
 	// Why is a human readable string describing why this
@@ -65,17 +65,17 @@ type PlanAction struct {
 }
 
 // Op to perform.
-func (p *NodePlan) Op() Operation { return p.operation }
+func (p *LocalPlan) Op() Operation { return p.operation }
 
 // Set the plan to the specified action.
-func (p *NodePlan) Set(a PlanAction) {
+func (p *LocalPlan) Set(a PlanDetails) {
 	// TODO: this needs to change the set of actions.
 	p.operation = a.Operation
 	// Save the pervious actions for debugging.
 	p.action = append(p.action, a)
 }
 
-func (p *NodePlan) String() string {
+func (p *LocalPlan) String() string {
 	if p == nil || len(p.action) == 0 {
 		return "no plan"
 	}
@@ -84,7 +84,7 @@ func (p *NodePlan) String() string {
 }
 
 // GraphvizString returns a Graphviz compatible summary of the plan.
-func (p *NodePlan) GraphvizString() string {
+func (p *LocalPlan) GraphvizString() string {
 	if p == nil || len(p.action) == 0 {
 		return "no plan"
 	}
@@ -99,6 +99,5 @@ func (p *NodePlan) GraphvizString() string {
 			s += fmt.Sprintf("[DIFF] %s: %s<br/>", item.State, item.Path)
 		}
 	}
-
 	return s
 }

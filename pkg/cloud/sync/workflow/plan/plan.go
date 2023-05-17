@@ -126,7 +126,7 @@ func (w *planner) propagateRecreates() error {
 			case sync.OpCreate, sync.OpRecreate, sync.OpDelete:
 				// Resource is already being created or destroy.
 			case sync.OpNothing, sync.OpUpdate:
-				node.LocalPlan().Set(sync.PlanAction{
+				node.LocalPlan().Set(sync.PlanDetails{
 					Operation: sync.OpRecreate,
 					Why:       fmt.Sprintf("Dependency %v is being recreated", node.ID()),
 				})

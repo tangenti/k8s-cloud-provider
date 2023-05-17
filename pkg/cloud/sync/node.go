@@ -98,11 +98,11 @@ type Node interface {
 
 	// Diff this node (want) with the state of the Node (got). This computes
 	// whether the Sync operation will be an update or recreation.
-	Diff(got Node) (*PlanAction, error)
+	Diff(got Node) (*PlanDetails, error)
 
 	// LocalPlan returns the plan for updating this Node. This will be nil for
 	// graphs that have not been planned.
-	LocalPlan() *NodePlan
+	LocalPlan() *LocalPlan
 
 	// Actions needed to perform the plan. This will be empty for graphs that
 	// have not been planned. "got" is the current state of the Node in the
@@ -125,21 +125,6 @@ type untypedResource interface {
 	Version() meta.Version
 }
 
-// newNodeFromResource is a helper method to create a new node of the right
-// specific type.
-func newNodeFromResource[N Node, R untypedResource](
-	newNode func(newFunc *cloud.ResourceID) N,
-	resource R,
-	na NodeAttributes,
-) N {
-	node := newNode(resource.ResourceID())
-	node.setResource(resource)
-	node.setAttributes(na)
-	node.setVersion(resource.Version())
-
-	return node
-}
-
 // nodeBase contains common fields across all of the Graph nodes.
 type nodeBase[GA any, Alpha any, Beta any] struct {
 	id        *cloud.ResourceID
@@ -155,7 +140,7 @@ type nodeBase[GA any, Alpha any, Beta any] struct {
 	// getVer determines the Version of the resource to get from Cloud.
 	getVer meta.Version
 	// plan is only set in the "want" graph.
-	plan NodePlan
+	plan LocalPlan
 }
 
 func (n *nodeBase[GA, Alpha, Beta]) Resource() api.FrozenResource[GA, Alpha, Beta] { return n.resource }
@@ -169,7 +154,7 @@ func (n *nodeBase[GA, Alpha, Beta]) SetOwnership(o OwnershipStatus) { n.ownershi
 func (n *nodeBase[GA, Alpha, Beta]) InRefs() []ResourceRef          { return n.inRefs }
 func (n *nodeBase[GA, Alpha, Beta]) GetErr() error                  { return n.getErr }
 func (n *nodeBase[GA, Alpha, Beta]) Sprint() string                 { return pretty.Sprint(n) }
-func (n *nodeBase[GA, Alpha, Beta]) LocalPlan() *NodePlan           { return &n.plan }
+func (n *nodeBase[GA, Alpha, Beta]) LocalPlan() *LocalPlan          { return &n.plan }
 
 func (n *nodeBase[GA, Alpha, Beta]) init(id *cloud.ResourceID, tt api.TypeTrait[GA, Alpha, Beta]) {
 	n.id = id
