@@ -7,8 +7,8 @@ import (
 
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/meta"
-	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync"
-	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/algo/trclosure"
+	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/resgraph"
+	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/resgraph/algo/trclosure"
 	"google.golang.org/api/compute/v1"
 )
 
@@ -18,29 +18,29 @@ func TestSyncX(t *testing.T) {
 		frURL = "https://www.googleapis.com/compute/v1/projects/bowei-gke/global/forwardingRules/k8s2-fr-m8dl1fmi-default-neg-demo-ing-bowo5l43"
 	)
 
-	graph := sync.NewGraph()
+	g := resgraph.New()
 	id, err := cloud.ParseResourceURL(frURL)
 	if err != nil {
 		t.Fatal(err)
 	}
-	node, err := sync.NewNodeByID(id, sync.NodeAttributes{
-		Ownership: sync.OwnershipManaged,
+	node, err := resgraph.NewNodeByID(id, resgraph.NodeAttributes{
+		Ownership: resgraph.OwnershipManaged,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = graph.AddNode(node)
+	err = g.AddNode(node)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	ctx := context.Background()
-	err = trclosure.Do(ctx, theCloud, graph)
+	err = trclosure.Do(ctx, theCloud, g)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	t.Error(graph.Validate())
+	t.Error(g.Validate())
 
 	//t.Error(pretty.Sprint(graph))
 }
