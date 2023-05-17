@@ -25,19 +25,17 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/algo/localplan"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/algo/traversal"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/algo/trclosure"
+	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/exec"
 )
 
-// Do will perform updates to cloud resources wanted in graph.
-func Do(ctx context.Context, c cloud.Cloud, graph *sync.Graph) error {
+// Do will plan updates to cloud resources wanted in graph. Returns the set of
+// Actions needed to sync to "want".
+func Do(ctx context.Context, c cloud.Cloud, want *sync.Graph) ([]exec.Action, error) {
 	w := planner{
 		cloud: c,
-		want:  graph,
+		want:  want,
 	}
-	if err := w.plan(ctx); err != nil {
-		return err
-	}
-
-	return nil
+	return w.plan(ctx)
 }
 
 const errPrefix = "Plan"
@@ -48,29 +46,29 @@ type planner struct {
 	want  *sync.Graph
 }
 
-func (w *planner) plan(ctx context.Context) error {
+func (pl *planner) plan(ctx context.Context) ([]exec.Action, error) {
 	// Assemble the "got" graph. This will get the current state of any
 	// resources and also enumerate any resouces that are currently linked that
 	// are not in the "want" graph.
-	w.got = w.want.CloneWithEmptyNodes()
+	pl.got = pl.want.CloneWithEmptyNodes()
 
 	// Fetch the current resource graph from Cloud.
 	// TODO: resource_prefix, ownership due to prefix etc.
-	err := trclosure.Do(ctx, w.cloud, w.got,
+	err := trclosure.Do(ctx, pl.cloud, pl.got,
 		trclosure.OnGetFunc(func(n sync.Node) error {
 			n.SetOwnership(sync.OwnershipManaged)
 			return nil
 		}),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Figure out what to do with Nodes in "got" that aren't in "want". These
 	// are resources that will no longer by referenced in the updated graph.
-	for _, gotNode := range w.got.All() {
+	for _, gotNode := range pl.got.All() {
 		switch {
-		case w.want.Resource(gotNode.ID()) != nil:
+		case pl.want.Resource(gotNode.ID()) != nil:
 			// Node exists in "want", don't need to do anything.
 		case gotNode.Ownership() == sync.OwnershipExternal:
 			// TODO: clone the node from the "got" graph for "want" unchanged.
@@ -78,33 +76,37 @@ func (w *planner) plan(ctx context.Context) error {
 			// Nodes that are no longer referenced should be deleted.
 			wantNode := gotNode.NewEmptyNode()
 			wantNode.SetState(sync.NodeDoesNotExist)
-			w.want.AddNode(wantNode)
+			pl.want.AddNode(wantNode)
 		default:
-			return fmt.Errorf("%s: node %s has invalid ownership %s", errPrefix, gotNode.ID(), gotNode.Ownership())
+			return nil, fmt.Errorf("%s: node %s has invalid ownership %s", errPrefix, gotNode.ID(), gotNode.Ownership())
 		}
 	}
 
 	// Compute the local plan for each resource.
-	if err := localplan.Do(w.got, w.want); err != nil {
-		return err
+	if err := localplan.Do(pl.got, pl.want); err != nil {
+		return nil, err
 	}
 
-	if err := w.propagateRecreates(); err != nil {
-		return err
+	if err := pl.propagateRecreates(); err != nil {
+		return nil, err
 	}
 
-	if err := w.sanityCheck(); err != nil {
-		return err
+	if err := pl.sanityCheck(); err != nil {
+		return nil, err
 	}
 
-	return nil
+	actions, err := pl.want.Actions(pl.got)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", errPrefix, err)
+	}
+	return actions, nil
 }
 
 // propagateRecreates through inbound references. If a resource needs to be
 // recreated, this means any references will also be affected transitively.
-func (w *planner) propagateRecreates() error {
+func (pl *planner) propagateRecreates() error {
 	var recreateNodes []sync.Node
-	for _, node := range w.want.All() {
+	for _, node := range pl.want.All() {
 		if node.LocalPlan().Op() == sync.OpRecreate {
 			recreateNodes = append(recreateNodes, node)
 		}
@@ -112,7 +114,7 @@ func (w *planner) propagateRecreates() error {
 
 	done := map[cloud.ResourceMapKey]bool{}
 	for _, node := range recreateNodes {
-		for _, inRefNode := range traversal.TransitiveInRefs(w.want, node) {
+		for _, inRefNode := range traversal.TransitiveInRefs(pl.want, node) {
 			if done[inRefNode.MapKey()] {
 				continue
 			}

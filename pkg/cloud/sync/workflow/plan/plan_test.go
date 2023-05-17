@@ -106,18 +106,13 @@ func TestLB(t *testing.T) {
 		got:   sync.NewGraph(),
 		want:  graph,
 	}
-	if err := pl.plan(context.Background()); err != nil {
+	actions, err := pl.plan(context.Background())
+	if err != nil {
 		t.Fatal(err)
 	}
-
 	// XXX
 	for _, node := range pl.want.All() {
 		t.Logf("[PLAN] %v: %s", node.ID(), node.LocalPlan())
-	}
-
-	actions, err := graph.Actions(pl.got)
-	if err != nil {
-		t.Fatal(err)
 	}
 
 	var viz exec.VizTracer

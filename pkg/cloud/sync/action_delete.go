@@ -66,7 +66,6 @@ func (a *genericDeleteAction[GA, Alpha, Beta]) Run(
 	var events []exec.Event
 	// Event: Node no longer exists.
 	events = append(events, exec.NewNotExistsEvent(a.id))
-	// Event: all references are removed. XXX-- this is wrong, these need to come from references in the got graph
 	for _, ref := range a.outRefs {
 		events = append(events, exec.NewDropRefEvent(ref.From, ref.To))
 	}
@@ -84,10 +83,7 @@ func (a *genericDeleteAction[GA, Alpha, Beta]) String() string {
 
 func deletePreconditions(got, want Node) []exec.Event {
 	var ret []exec.Event
-	// Event: all references are removed. XXX-- this is wrong, these need to come from references in the got graph
-	// Condition: resource must exist. TODO: this seems to make issues
-	// ret = append(ret, exec.NewExistsEvent(node.ID()))
-	// Condition: no inRefs to the resource.
+	// Condition: no inRefs to the resource still exist.
 	for _, ref := range got.InRefs() {
 		ret = append(ret, exec.NewDropRefEvent(ref.From, ref.To))
 	}
