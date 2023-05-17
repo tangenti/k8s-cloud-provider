@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package workflow
+package plan
 
 import (
 	"context"
@@ -24,6 +24,7 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/meta"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync"
+	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/algo/graphviz"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/exec"
 	"google.golang.org/api/compute/v1"
 )
@@ -100,7 +101,7 @@ func TestLB(t *testing.T) {
 	})
 
 	mock.UrlMaps().Insert(context.Background(), meta.GlobalKey("umx"), &compute.UrlMap{})
-	pl := syncPlanner{
+	pl := planner{
 		cloud: mock,
 		got:   sync.NewGraph(),
 		want:  graph,
@@ -128,6 +129,6 @@ func TestLB(t *testing.T) {
 	t.Error(err)
 	t.Error(viz.String())
 
-	fmt.Println("got", sync.Graphviz(pl.got))
-	fmt.Println("want", sync.Graphviz(pl.want))
+	fmt.Println("got", graphviz.Do(pl.got))
+	fmt.Println("want", graphviz.Do(pl.want))
 }

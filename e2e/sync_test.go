@@ -8,6 +8,7 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/meta"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync"
+	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/algo/trclosure"
 	"google.golang.org/api/compute/v1"
 )
 
@@ -34,7 +35,7 @@ func TestSyncX(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	err = sync.TransitiveClosure(ctx, theCloud, graph)
+	err = trclosure.Do(ctx, theCloud, graph)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package workflow
+package gc
 
 import (
 	"context"
@@ -23,6 +23,8 @@ import (
 
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync"
+	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/algo/localplan"
+	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/algo/trclosure"
 	"google.golang.org/api/compute/v1"
 	"k8s.io/klog/v2"
 )
@@ -98,8 +100,8 @@ func (w *gcWorkflow) do(ctx context.Context) error {
 		}
 	}
 	// Take the transitive closure from the FRs to get the resource graph.
-	if err := sync.TransitiveClosure(ctx, w.cloud, got,
-		sync.TransitiveClosureOnGet(func(node sync.Node) error {
+	if err := trclosure.Do(ctx, w.cloud, got,
+		trclosure.OnGetFunc(func(node sync.Node) error {
 			if strings.HasPrefix(node.ID().Key.Name, w.config.ResourcePrefix) {
 				node.SetOwnership(sync.OwnershipManaged)
 			} else {
@@ -131,7 +133,7 @@ func (w *gcWorkflow) do(ctx context.Context) error {
 
 	// TODO:
 
-	if err := sync.LocalPlan(got, want); err != nil {
+	if err := localplan.Do(got, want); err != nil {
 		return fmt.Errorf("gc worflow: %w", err)
 	}
 

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package workflow
+package plan
 
 import (
 	"context"
@@ -22,11 +22,14 @@ import (
 
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync"
+	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/algo/localplan"
+	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/algo/traversal"
+	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/algo/trclosure"
 )
 
-// PlanSync will perform updates to cloud resources wanted in graph.
-func PlanSync(ctx context.Context, c cloud.Cloud, graph *sync.Graph) error {
-	w := syncPlanner{
+// Do will perform updates to cloud resources wanted in graph.
+func Do(ctx context.Context, c cloud.Cloud, graph *sync.Graph) error {
+	w := planner{
 		cloud: c,
 		want:  graph,
 	}
@@ -37,15 +40,15 @@ func PlanSync(ctx context.Context, c cloud.Cloud, graph *sync.Graph) error {
 	return nil
 }
 
-const planSyncErrPrefix = "PlanSync"
+const errPrefix = "Plan"
 
-type syncPlanner struct {
+type planner struct {
 	cloud cloud.Cloud
 	got   *sync.Graph
 	want  *sync.Graph
 }
 
-func (w *syncPlanner) plan(ctx context.Context) error {
+func (w *planner) plan(ctx context.Context) error {
 	// Assemble the "got" graph. This will get the current state of any
 	// resources and also enumerate any resouces that are currently linked that
 	// are not in the "want" graph.
@@ -53,8 +56,8 @@ func (w *syncPlanner) plan(ctx context.Context) error {
 
 	// Fetch the current resource graph from Cloud.
 	// TODO: resource_prefix, ownership due to prefix etc.
-	err := sync.TransitiveClosure(ctx, w.cloud, w.got,
-		sync.TransitiveClosureOnGet(func(n sync.Node) error {
+	err := trclosure.Do(ctx, w.cloud, w.got,
+		trclosure.OnGetFunc(func(n sync.Node) error {
 			n.SetOwnership(sync.OwnershipManaged)
 			return nil
 		}),
@@ -77,12 +80,12 @@ func (w *syncPlanner) plan(ctx context.Context) error {
 			wantNode.SetState(sync.NodeDoesNotExist)
 			w.want.AddNode(wantNode)
 		default:
-			return fmt.Errorf("%s: node %s has invalid ownership %s", planSyncErrPrefix, gotNode.ID(), gotNode.Ownership())
+			return fmt.Errorf("%s: node %s has invalid ownership %s", errPrefix, gotNode.ID(), gotNode.Ownership())
 		}
 	}
 
 	// Compute the local plan for each resource.
-	if err := sync.LocalPlan(w.got, w.want); err != nil {
+	if err := localplan.Do(w.got, w.want); err != nil {
 		return err
 	}
 
@@ -99,7 +102,7 @@ func (w *syncPlanner) plan(ctx context.Context) error {
 
 // propagateRecreates through inbound references. If a resource needs to be
 // recreated, this means any references will also be affected transitively.
-func (w *syncPlanner) propagateRecreates() error {
+func (w *planner) propagateRecreates() error {
 	var recreateNodes []sync.Node
 	for _, node := range w.want.All() {
 		if node.LocalPlan().Op() == sync.OpRecreate {
@@ -109,14 +112,14 @@ func (w *syncPlanner) propagateRecreates() error {
 
 	done := map[cloud.ResourceMapKey]bool{}
 	for _, node := range recreateNodes {
-		for _, inRefNode := range sync.TransitiveInRefs(w.want, node) {
+		for _, inRefNode := range traversal.TransitiveInRefs(w.want, node) {
 			if done[inRefNode.MapKey()] {
 				continue
 			}
 			done[inRefNode.MapKey()] = true
 
 			if inRefNode.Ownership() != sync.OwnershipManaged {
-				return fmt.Errorf("%s: %v planned for recreate, but inRef %v ownership=%s", planSyncErrPrefix, node.ID(), inRefNode.ID(), inRefNode.Ownership())
+				return fmt.Errorf("%s: %v planned for recreate, but inRef %v ownership=%s", errPrefix, node.ID(), inRefNode.ID(), inRefNode.Ownership())
 			}
 
 			switch inRefNode.LocalPlan().Op() {
@@ -128,26 +131,26 @@ func (w *syncPlanner) propagateRecreates() error {
 					Why:       fmt.Sprintf("Dependency %v is being recreated", node.ID()),
 				})
 			default:
-				return fmt.Errorf("%s: inRef %s has invalid op %s, can't propagate recreate", planSyncErrPrefix, inRefNode.ID(), inRefNode.LocalPlan().Op())
+				return fmt.Errorf("%s: inRef %s has invalid op %s, can't propagate recreate", errPrefix, inRefNode.ID(), inRefNode.LocalPlan().Op())
 			}
 		}
 	}
 	return nil
 }
 
-func (w *syncPlanner) sanityCheck() error {
+func (w *planner) sanityCheck() error {
 	w.want.ComputeInRefs()
 	for _, node := range w.want.All() {
 		switch node.LocalPlan().Op() {
 		case sync.OpUnknown:
-			return fmt.Errorf("%s: node %v has invalid op %s", planSyncErrPrefix, node.ID(), node.LocalPlan().Op())
+			return fmt.Errorf("%s: node %v has invalid op %s", errPrefix, node.ID(), node.LocalPlan().Op())
 		case sync.OpDelete:
 			// If A => B; if B is to be deleted, then A must be deleted.
 			for _, refs := range node.InRefs() {
 				if inNode := w.want.Resource(refs.To); inNode == nil {
-					return fmt.Errorf("%s: inRef from node %v that doesn't exist", planSyncErrPrefix, refs.From)
+					return fmt.Errorf("%s: inRef from node %v that doesn't exist", errPrefix, refs.From)
 				} else if inNode.LocalPlan().Op() != sync.OpDelete {
-					return fmt.Errorf("%s: %v to be deleted, but inRef %v is not", planSyncErrPrefix, node.ID(), inNode.ID())
+					return fmt.Errorf("%s: %v to be deleted, but inRef %v is not", errPrefix, node.ID(), inNode.ID())
 				}
 			}
 		}
