@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package algo
+package localplan
 
 import (
 	"fmt"
@@ -22,21 +22,21 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync"
 )
 
-// LocalPlan computes a plan local to each Node in the graph and puts the
-// resulting plan in the "want" Graph. It is required that got and want have the
-// same set of Nodes; Nodes that don't exist need to be marked as with
+// Do computes a plan local to each Node in the graph and puts the resulting
+// plan in the "want" Graph. It is required that got and want have the same set
+// of Nodes; Nodes that don't exist need to be marked as with
 // NodeStateDoesNotExist.
-func LocalPlan(got, want *sync.Graph) error {
-	p := localPlanner{got: got, want: want}
+func Do(got, want *sync.Graph) error {
+	p := planner{got: got, want: want}
 	return p.do()
 }
 
-type localPlanner struct {
+type planner struct {
 	got  *sync.Graph
 	want *sync.Graph
 }
 
-func (p *localPlanner) do() error {
+func (p *planner) do() error {
 	if err := p.preconditions(); err != nil {
 		return err
 	}
@@ -51,7 +51,7 @@ func (p *localPlanner) do() error {
 	return nil
 }
 
-func (p *localPlanner) preconditions() error {
+func (p *planner) preconditions() error {
 	for _, node := range p.got.All() {
 		if p.want.Resource(node.ID()) == nil {
 			return fmt.Errorf("localPlanner.preconditions: node %s in got but not in want", node.ID())
@@ -66,7 +66,7 @@ func (p *localPlanner) preconditions() error {
 	return nil
 }
 
-func (p *localPlanner) localPlan(gotNode, wantNode sync.Node) error {
+func (p *planner) localPlan(gotNode, wantNode sync.Node) error {
 	if wantNode.Ownership() != sync.OwnershipManaged {
 		wantNode.LocalPlan().Set(sync.PlanAction{
 			Operation: sync.OpNothing,

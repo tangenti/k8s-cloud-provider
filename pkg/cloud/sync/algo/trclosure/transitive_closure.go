@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package algo
+package trclosure
 
 import (
 	"context"
@@ -22,38 +22,31 @@ import (
 
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync"
+	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/algo"
 	"github.com/kr/pretty"
 	"k8s.io/klog/v2"
 )
 
-type nodeQueue struct{ items []sync.Node }
+type Option func(c *Config)
 
-func (q *nodeQueue) pop() sync.Node {
-	node := q.items[0]
-	q.items = q.items[1:]
-	return node
-}
-func (q *nodeQueue) add(n sync.Node) { q.items = append(q.items, n) }
-func (q *nodeQueue) empty() bool     { return len(q.items) == 0 }
-
-type TransitiveClosureOption func(c *transitiveClosureConfig)
-
-func TransitiveClosureOnGet(f func(n sync.Node) error) TransitiveClosureOption {
-	return func(c *transitiveClosureConfig) { c.onGet = f }
+// OnGetFunc is called on the Node after getting the resource from Cloud. This
+// can modify properties of the Node, for example, set the appropriate Onwership
+// state.
+func OnGetFunc(f func(n sync.Node) error) Option {
+	return func(c *Config) { c.onGet = f }
 }
 
-type transitiveClosureConfig struct {
+// Config for the algorithm.
+type Config struct {
 	onGet func(n sync.Node) error
 }
 
-// TransitiveClosure traverses and fetches the the graph, adding all of the
-// dependencies into the graph. onGet() is called after fetching the resource.
-// This can modify properties of the Node, for example, set the appropriate
-// Onwership state.
-func TransitiveClosure(ctx context.Context, cl cloud.Cloud, gr *sync.Graph, opts ...TransitiveClosureOption) error {
+// Do traverses and fetches the the graph, adding all of the dependencies into
+// the graph, pulling the resource from Cloud as needed.
+func Do(ctx context.Context, cl cloud.Cloud, gr *sync.Graph, opts ...Option) error {
 	klog.Infof("TransitiveClosure")
 
-	config := transitiveClosureConfig{
+	config := Config{
 		onGet: func(sync.Node) error { return nil },
 	}
 	for _, o := range opts {
@@ -61,10 +54,10 @@ func TransitiveClosure(ctx context.Context, cl cloud.Cloud, gr *sync.Graph, opts
 	}
 
 	// TODO: run this in parallel.
-	work := nodeQueue{items: gr.All()}
+	work := algo.NewNodeQueue(gr.All())
 
-	for !work.empty() {
-		node := work.pop()
+	for !work.Empty() {
+		node := work.Pop()
 
 		err := node.Get(ctx, cl)
 		klog.Infof("node.Get() = %v (%s)", err, pretty.Sprint(node))
@@ -99,7 +92,7 @@ func TransitiveClosure(ctx context.Context, cl cloud.Cloud, gr *sync.Graph, opts
 			if err != nil {
 				return fmt.Errorf("TransitiveClosure: %w", err)
 			}
-			work.add(refNode)
+			work.Add(refNode)
 		}
 	}
 

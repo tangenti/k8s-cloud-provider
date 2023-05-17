@@ -14,11 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package algo
+package traversal
 
 import (
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync"
+	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/algo"
 )
 
 // ConnectedSubgraph returns the set of Nodes (inclusive of node) that are
@@ -26,11 +27,11 @@ import (
 func ConnectedSubgraph(g *sync.Graph, node sync.Node) ([]sync.Node, error) {
 	done := map[cloud.ResourceMapKey]sync.Node{}
 
-	var work nodeQueue
-	work.add(node)
+	var work algo.NodeQueue
+	work.Add(node)
 
-	for !work.empty() {
-		cur := work.pop()
+	for !work.Empty() {
+		cur := work.Pop()
 		done[cur.MapKey()] = cur
 
 		refs, err := cur.OutRefs()
@@ -41,14 +42,14 @@ func ConnectedSubgraph(g *sync.Graph, node sync.Node) ([]sync.Node, error) {
 			if _, ok := done[ref.To.MapKey()]; ok {
 				continue
 			}
-			work.add(g.Resource(ref.To))
+			work.Add(g.Resource(ref.To))
 		}
 		refs = cur.InRefs()
 		for _, ref := range refs {
 			if _, ok := done[ref.From.MapKey()]; ok {
 				continue
 			}
-			work.add(g.Resource(ref.From))
+			work.Add(g.Resource(ref.From))
 		}
 	}
 
@@ -68,11 +69,11 @@ func TransitiveInRefs(g *sync.Graph, node sync.Node) []sync.Node {
 
 	done := map[cloud.ResourceMapKey]sync.Node{}
 
-	var work nodeQueue
-	work.add(node)
+	var work algo.NodeQueue
+	work.Add(node)
 
-	for !work.empty() {
-		cur := work.pop()
+	for !work.Empty() {
+		cur := work.Pop()
 		done[cur.MapKey()] = cur
 
 		refs := cur.InRefs()
@@ -80,7 +81,7 @@ func TransitiveInRefs(g *sync.Graph, node sync.Node) []sync.Node {
 			if _, ok := done[ref.From.MapKey()]; ok {
 				continue
 			}
-			work.add(g.Resource(ref.From))
+			work.Add(g.Resource(ref.From))
 		}
 	}
 

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package algo
+package graphviz
 
 import (
 	"bytes"
@@ -24,9 +24,9 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync"
 )
 
-// Graphviz returns a .dot (http://graphviz.org) representation of the resource
-// graph for visualization.
-func Graphviz(g *sync.Graph) string {
+// Do returns a .dot (http://graphviz.org) representation of the resource graph
+// for visualization.
+func Do(g *sync.Graph) string {
 	var buf bytes.Buffer
 	buf.WriteString("digraph G {\n")
 	buf.WriteString("  rankdir=TB\n") // layout top to bottom.
@@ -39,7 +39,7 @@ func Graphviz(g *sync.Graph) string {
 			kv: map[string]any{
 				"localPlan": node.LocalPlan().GraphvizString(),
 				"state":     node.State(),
-				"version":   node.Version(),
+				//"version":   node.Version(), // TODO
 			},
 		}
 		deps, outRefErr := node.OutRefs()
