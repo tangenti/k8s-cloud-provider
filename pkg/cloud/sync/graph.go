@@ -141,6 +141,17 @@ func (g *Graph) AddNode(node Node) error {
 	return fmt.Errorf("unknown resource type: %T", node)
 }
 
+// CloneWithEmptyNodes creates a clone of this graph with Nodes that have the
+// same attributes but does not have any values (e.g. the Resource is nil). This
+// is used with TransitiveClosure to download the Resource values from Cloud.
+func (g *Graph) CloneWithEmptyNodes() *Graph {
+	ret := NewGraph()
+	for _, node := range g.All() {
+		ret.AddNode(node.NewEmptyNode())
+	}
+	return ret
+}
+
 // All returns all nodes in the graph.
 func (g *Graph) All() []Node {
 	var ret []Node
