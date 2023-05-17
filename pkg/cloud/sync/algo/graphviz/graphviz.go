@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync"
 )
 
@@ -32,7 +33,7 @@ func Do(g *sync.Graph) string {
 	buf.WriteString("  rankdir=TB\n") // layout top to bottom.
 
 	for _, node := range g.All() {
-		gn := &graphvizNode{
+		gn := &viznode{
 			name:  node.ID().String(),
 			shape: "box",
 			style: "filled",
@@ -44,7 +45,8 @@ func Do(g *sync.Graph) string {
 		}
 		deps, outRefErr := node.OutRefs()
 		for _, dep := range deps {
-			buf.WriteString(fmt.Sprintf(`  "%s" -> "%s"`+"\n", node.ID(), dep.To))
+			e := vizedge{from: node.ID(), to: dep.To, field: dep.Path.String()}
+			buf.WriteString(e.String())
 		}
 
 		gn.color = gn.opColor(node.LocalPlan().Op())
@@ -67,7 +69,7 @@ func Do(g *sync.Graph) string {
 	return buf.String()
 }
 
-type graphvizNode struct {
+type viznode struct {
 	name string
 
 	color string
@@ -77,7 +79,7 @@ type graphvizNode struct {
 	kv map[string]any
 }
 
-func (*graphvizNode) indent(n int) string {
+func (*viznode) indent(n int) string {
 	var ret string
 	for i := 0; i < n; i++ {
 		ret += "  "
@@ -85,7 +87,7 @@ func (*graphvizNode) indent(n int) string {
 	return ret
 }
 
-func (*graphvizNode) opColor(op sync.Operation) string {
+func (*viznode) opColor(op sync.Operation) string {
 	switch op {
 	case sync.OpCreate:
 		return "chartreuse"
@@ -103,7 +105,7 @@ func (*graphvizNode) opColor(op sync.Operation) string {
 	return "mediumpurple1"
 }
 
-func (n *graphvizNode) String() string {
+func (n *viznode) String() string {
 	type line struct {
 		indent int
 		s      string
@@ -146,4 +148,13 @@ func (n *graphvizNode) String() string {
 		out += n.indent(l.indent) + l.s + "\n"
 	}
 	return out
+}
+
+type vizedge struct {
+	from, to *cloud.ResourceID
+	field    string
+}
+
+func (e *vizedge) String() string {
+	return fmt.Sprintf("  \"%s\" -> \"%s\" [label=<%s>]\n", e.from, e.to, e.field)
 }

@@ -43,12 +43,12 @@ func (tr *VizTracer) Record(entry *TraceEntry) {
 
 func (tr *VizTracer) Finish(pending []Action) {
 	for _, a := range pending {
-		tr.buf.WriteString(fmt.Sprintf("  \"%s\" [shape=box,color=pink]\n", a))
+		tr.buf.WriteString(fmt.Sprintf("  \"%s\" [style=filled,shape=box,color=pink]\n", a))
 		dupe := map[string]struct{}{}
 		for _, ev := range a.PendingEvents() {
 			if _, ok := dupe[ev.String()]; !ok {
 				dupe[ev.String()] = struct{}{}
-				tr.buf.WriteString(fmt.Sprintf("  \"%s\" [color=pink]\n", ev))
+				tr.buf.WriteString(fmt.Sprintf("  \"%s\" [style=filled,color=pink]\n", ev))
 			}
 			tr.buf.WriteString(fmt.Sprintf("  \"%s\" -> \"%s\"\n", ev, a))
 		}

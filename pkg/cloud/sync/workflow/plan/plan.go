@@ -140,16 +140,16 @@ func (pl *planner) propagateRecreates() error {
 	return nil
 }
 
-func (w *planner) sanityCheck() error {
-	w.want.ComputeInRefs()
-	for _, node := range w.want.All() {
+func (pl *planner) sanityCheck() error {
+	pl.want.ComputeInRefs()
+	for _, node := range pl.want.All() {
 		switch node.LocalPlan().Op() {
 		case sync.OpUnknown:
 			return fmt.Errorf("%s: node %v has invalid op %s", errPrefix, node.ID(), node.LocalPlan().Op())
 		case sync.OpDelete:
 			// If A => B; if B is to be deleted, then A must be deleted.
 			for _, refs := range node.InRefs() {
-				if inNode := w.want.Resource(refs.To); inNode == nil {
+				if inNode := pl.want.Resource(refs.To); inNode == nil {
 					return fmt.Errorf("%s: inRef from node %v that doesn't exist", errPrefix, refs.From)
 				} else if inNode.LocalPlan().Op() != sync.OpDelete {
 					return fmt.Errorf("%s: %v to be deleted, but inRef %v is not", errPrefix, node.ID(), inNode.ID())
@@ -157,5 +157,6 @@ func (w *planner) sanityCheck() error {
 			}
 		}
 	}
+
 	return nil
 }
