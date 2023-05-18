@@ -81,55 +81,67 @@ func showPage(w http.ResponseWriter, r *http.Request) {
 
 	outln("<!DOCTYPE html>")
 	outf("<h1>%s</h1>", name)
+	outf("<div>%s</div>", tc.Description)
 
 	mock := cloud.NewMockGCE(&cloud.SingleProjectRouter{ID: "proj"})
-	result, err := plan.Do(context.Background(), mock, tc.Steps[0].Graph)
 
-	outln("<pre>")
-	outf("plan.Do() = _, %v", err)
-	outln("</pre>")
+	for idx, step := range tc.Steps {
+		outln("<hr />")
+		outf("<h2>Step %d</h2>", idx)
 
-	outln("<h2>Got graph</h2>")
-	svg, err := dotSVG(graphviz.Do(result.Got))
-	if err == nil {
-		outf("%s", svg)
-	} else {
-		outf("dotSVG() = %v", err)
-	}
-
-	outln("<h2>Want graph</h2>")
-	svg, err = dotSVG(graphviz.Do(result.Want))
-	if err == nil {
-		outln(svg)
-	} else {
-		outf("dotSVG() = %v", err)
-	}
-
-	var viz exec.VizTracer
-	ex := exec.NewSerialExecutor(result.Actions, exec.DryRunOption(true), exec.TracerOption(&viz))
-	pending, err := ex.Run(nil, nil)
-
-	outln("<h2>Plan dry-run</h2>")
-	svg, err = dotSVG(viz.String())
-	if err == nil {
-		outln(svg)
-	} else {
-		outf("<pre>dotSVG() = %v</pre>", err)
-	}
-
-	outln("<h2>Plan pending items</h2>\n")
-
-	if len(pending) == 0 {
-		outln("all actions were executable")
-	} else {
-
-		outln("<ol>")
-		for _, item := range pending {
-			outf("<li>%s</li>", item.Summary())
+		if step.SetUp != nil {
+			tc.Steps[0].SetUp(mock)
 		}
-		outln("</ol>")
+
+		result, err := plan.Do(context.Background(), mock, step.Graph)
+
+		outln("<pre>")
+		outf("plan.Do() = _, %v", err)
+		outln("</pre>")
+
+		outln("<h3>Got graph</h3>")
+		svg, err := dotSVG(graphviz.Do(result.Got))
+		if err == nil {
+			outf("%s", svg)
+		} else {
+			outf("dotSVG() = %v", err)
+		}
+
+		outln("<h3>Want graph</h3>")
+		svg, err = dotSVG(graphviz.Do(result.Want))
+		if err == nil {
+			outln(svg)
+		} else {
+			outf("dotSVG() = %v", err)
+		}
+
+		var viz exec.VizTracer
+		ex := exec.NewSerialExecutor(result.Actions, exec.DryRunOption(false), exec.TracerOption(&viz))
+		pending, err := ex.Run(context.Background(), mock)
+
+		outln("<h3>Plan</h3>")
+		svg, err = dotSVG(viz.String())
+		if err == nil {
+			outln(svg)
+		} else {
+			outf("<pre>dotSVG() = %v</pre>", err)
+		}
+
+		outln("<h3>Plan pending items</h3>\n")
+
+		if len(pending) == 0 {
+			outln("all actions were executable")
+		} else {
+
+			outln("<ol>")
+			for _, item := range pending {
+				outf("<li>%s</li>", item.Summary())
+			}
+			outln("</ol>")
+		}
 	}
 
+	outln("<hr />\n")
 	outln("<h2>Test case</h2>\n")
 	outln("<pre>")
 	outln(pretty.Sprint(tc))

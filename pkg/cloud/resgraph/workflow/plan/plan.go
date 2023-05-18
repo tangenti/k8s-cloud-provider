@@ -124,6 +124,8 @@ func (pl *planner) propagateRecreates() error {
 
 	done := map[cloud.ResourceMapKey]bool{}
 	for _, node := range recreateNodes {
+		done[node.MapKey()] = true
+
 		for _, inRefNode := range traversal.TransitiveInRefs(pl.want, node) {
 			if done[inRefNode.MapKey()] {
 				continue
@@ -138,7 +140,7 @@ func (pl *planner) propagateRecreates() error {
 			case resgraph.OpCreate, resgraph.OpRecreate, resgraph.OpDelete:
 				// Resource is already being created or destroy.
 			case resgraph.OpNothing, resgraph.OpUpdate:
-				node.LocalPlan().Set(resgraph.PlanDetails{
+				inRefNode.LocalPlan().Set(resgraph.PlanDetails{
 					Operation: resgraph.OpRecreate,
 					Why:       fmt.Sprintf("Dependency %v is being recreated", node.ID()),
 				})

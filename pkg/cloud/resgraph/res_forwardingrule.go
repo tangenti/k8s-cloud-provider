@@ -134,7 +134,7 @@ func (node *ForwardingRuleNode) Diff(gotNode Node) (*PlanDetails, error) {
 		return nil, fmt.Errorf("ForwardingRuleNode: Diff %w", err)
 	}
 
-	if !diff.HasDiff() {
+	if diff.HasDiff() {
 		// TODO:
 		return &PlanDetails{
 			Operation: OpRecreate,

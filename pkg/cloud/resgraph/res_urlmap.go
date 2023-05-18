@@ -111,7 +111,7 @@ func (node *UrlMapNode) Diff(gotNode Node) (*PlanDetails, error) {
 		return nil, fmt.Errorf("UrlMapNode: Diff %w", err)
 	}
 
-	if !diff.HasDiff() {
+	if diff.HasDiff() {
 		// TODO: handle set labels with an update operation.
 		return &PlanDetails{
 			Operation: OpRecreate,

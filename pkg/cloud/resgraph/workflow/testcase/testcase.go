@@ -31,6 +31,7 @@ type TestCase struct {
 }
 
 type Step struct {
+	Description string
 	SetUp       func(cloud.Cloud)
 	Graph       *resgraph.Graph
 	WantActions []exec.Action
