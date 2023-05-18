@@ -29,11 +29,11 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/resgraph/algo/graphviz"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/resgraph/exec"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/resgraph/workflow/plan"
-	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/resgraph/workflow/testcase"
+	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/resgraph/workflow/testlib"
 	"github.com/kr/pretty"
 	"k8s.io/klog/v2"
 
-	_ "github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/resgraph/workflow/testcase/lb"
+	_ "github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/resgraph/workflow/testlib/lb"
 )
 
 var (
@@ -55,90 +55,50 @@ func main() {
 	klog.Error(http.ListenAndServe(flags.http, nil))
 }
 
-func mainPage(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("<!DOCTYPE html>\n"))
-	w.Write([]byte("<ol>\n"))
-
-	for _, c := range testcase.Cases() {
-		w.Write([]byte(fmt.Sprintf("<li><a href=\"/show?q=%s\">%s</a></li>\n", c.Name, c.Name)))
-	}
-	w.Write([]byte("</ol>\n"))
-}
-
-func showPage(w http.ResponseWriter, r *http.Request) {
+func wrapWriter(w io.Writer) (func(s string), func(f string, args ...any)) {
 	outln := func(s string) { w.Write([]byte(s + "\n")) }
 	outf := func(f string, args ...any) {
 		w.Write([]byte(fmt.Sprintf(f, args...) + "\n"))
 	}
+	return outln, outf
+}
+
+func mainPage(w http.ResponseWriter, r *http.Request) {
+	klog.Infof("mainPage")
+
+	outln, outf := wrapWriter(w)
+
+	outln("<!DOCTYPE html>")
+	outln("<h1>Test cases</h1>")
+	outln("<ol>")
+
+	for _, c := range testlib.Cases() {
+		outf("<li><a href=\"/show?q=%s\">%s</a>: %s</li>", c.Name, c.Name, c.Description)
+	}
+	outln("</ol>")
+}
+
+func showPage(w http.ResponseWriter, r *http.Request) {
+	klog.Infof("showPage %q", r.URL)
+
+	outln, outf := wrapWriter(w)
 
 	name := r.URL.Query().Get("q")
-	tc := testcase.Case(name)
+	tc := testlib.Case(name)
 	if tc == nil {
+		klog.Infof("showPage %q: 404", name)
 		w.WriteHeader(404)
 		outf("%q is not a valid test case", name)
 		return
 	}
 
 	outln("<!DOCTYPE html>")
-	outf("<h1>%s</h1>", name)
+	outf("<h1>Test case: %s</h1>", name)
 	outf("<div>%s</div>", tc.Description)
 
-	mock := cloud.NewMockGCE(&cloud.SingleProjectRouter{ID: "proj"})
-
+	cl := cloud.NewMockGCE(&cloud.SingleProjectRouter{ID: "proj"})
 	for idx, step := range tc.Steps {
-		outln("<hr />")
-		outf("<h2>Step %d</h2>", idx)
-
-		if step.SetUp != nil {
-			tc.Steps[0].SetUp(mock)
-		}
-
-		result, err := plan.Do(context.Background(), mock, step.Graph)
-
-		outln("<pre>")
-		outf("plan.Do() = _, %v", err)
-		outln("</pre>")
-
-		outln("<h3>Got graph</h3>")
-		svg, err := dotSVG(graphviz.Do(result.Got))
-		if err == nil {
-			outf("%s", svg)
-		} else {
-			outf("dotSVG() = %v", err)
-		}
-
-		outln("<h3>Want graph</h3>")
-		svg, err = dotSVG(graphviz.Do(result.Want))
-		if err == nil {
-			outln(svg)
-		} else {
-			outf("dotSVG() = %v", err)
-		}
-
-		var viz exec.VizTracer
-		ex := exec.NewSerialExecutor(result.Actions, exec.DryRunOption(false), exec.TracerOption(&viz))
-		pending, err := ex.Run(context.Background(), mock)
-
-		outln("<h3>Plan</h3>")
-		svg, err = dotSVG(viz.String())
-		if err == nil {
-			outln(svg)
-		} else {
-			outf("<pre>dotSVG() = %v</pre>", err)
-		}
-
-		outln("<h3>Plan pending items</h3>\n")
-
-		if len(pending) == 0 {
-			outln("all actions were executable")
-		} else {
-
-			outln("<ol>")
-			for _, item := range pending {
-				outf("<li>%s</li>", item.Summary())
-			}
-			outln("</ol>")
-		}
+		showStep(w, cl, idx, &step)
 	}
 
 	outln("<hr />\n")
@@ -146,26 +106,101 @@ func showPage(w http.ResponseWriter, r *http.Request) {
 	outln("<pre>")
 	outln(pretty.Sprint(tc))
 	outln("</pre>")
+
+	klog.Infof("showPage %q: 200", name)
+}
+
+func showStep(w http.ResponseWriter, cl cloud.Cloud, idx int, step *testlib.Step) {
+	outln, outf := wrapWriter(w)
+
+	outln("<hr />")
+	outf("<h2>Step %d</h2>", idx)
+
+	if step.SetUp != nil {
+		step.SetUp(cl)
+	}
+
+	result, err := plan.Do(context.Background(), cl, step.Graph)
+	klog.Infof("plan.Do() = _, %v", err)
+
+	outln("<pre>")
+	outf("plan.Do() = _, %v", err)
+	outln("</pre>")
+
+	if err != nil {
+		return
+	}
+
+	outln("<h3>Got graph</h3>")
+	outln("")
+	svg, err := dotSVG(graphviz.Do(result.Got))
+	if err == nil {
+		outln(svg)
+	} else {
+		klog.Infof("dotSVG(Got) = _, %v", err)
+		outf("dotSVG() = %v", err)
+	}
+	outln("")
+
+	outln("<h3>Want graph</h3>")
+	outln("")
+	svg, err = dotSVG(graphviz.Do(result.Want))
+	if err == nil {
+		outln(svg)
+	} else {
+		klog.Infof("dotSVG(Want) = _, %v", err)
+		outf("dotSVG() = %v", err)
+	}
+	outln("")
+
+	var viz exec.VizTracer
+	ex := exec.NewSerialExecutor(result.Actions, exec.DryRunOption(false), exec.TracerOption(&viz))
+	pending, err := ex.Run(context.Background(), cl)
+
+	outln("<h3>Plan</h3>")
+	outln("")
+	svg, err = dotSVG(viz.String())
+	if err == nil {
+		outln(svg)
+	} else {
+		klog.Infof("dotSVG(viz) = _, %v", err)
+		outf("<pre>dotSVG() = %v</pre>", err)
+	}
+	outln("")
+
+	outln("<h3>Pending Actions</h3>\n")
+	klog.Infof("Pending actions = %d", len(pending))
+
+	if len(pending) == 0 {
+		outln("No pending actions remain; all actions were executable.")
+	} else {
+		outln("<ol>")
+		for _, item := range pending {
+			outf("<li>%s</li>", item.Summary())
+		}
+		outln("</ol>")
+	}
 }
 
 func dotSVG(text string) (string, error) {
+	klog.Infof("dotSVG: %q", text)
 	cmd := coreexec.Command(flags.dotExec, "-Tsvg")
 
 	inPipe, err := cmd.StdinPipe()
 	if err != nil {
-		klog.Errorf("StdinPipe = %v", err)
+		klog.Errorf("dotSVG: StdinPipe = %v", err)
 		return "", err
 	}
 
 	outPipe, err := cmd.StdoutPipe()
 	if err != nil {
-		klog.Errorf("StdoutPipe = %v", err)
+		klog.Errorf("dotSVG: StdoutPipe = %v", err)
 		return "", err
 	}
 
 	errPipe, err := cmd.StderrPipe()
 	if err != nil {
-		klog.Errorf("StderrPipe = %v", err)
+		klog.Errorf("dotSVG: StderrPipe = %v", err)
 		return "", err
 	}
 
@@ -175,7 +210,7 @@ func dotSVG(text string) (string, error) {
 	go func() {
 		cmdErr = cmd.Run()
 		if err != nil {
-			klog.Errorf("cmd.Run() = %v", cmdErr)
+			klog.Errorf("dotSVG: cmd.Run() = %v", cmdErr)
 		}
 		close(cmdDone)
 	}()
@@ -183,15 +218,15 @@ func dotSVG(text string) (string, error) {
 	n, err := inPipe.Write([]byte(text))
 	inPipe.Close()
 
-	klog.Infof("Write() = %d, %v", n, err)
+	klog.Infof("dotSVG: Write() = %d, %v", n, err)
 
 	bytes, err := io.ReadAll(outPipe)
 	if err != nil {
-		klog.Errorf("ReadAll(outPipe) = %v", err)
+		klog.Errorf("dotSVG: ReadAll(outPipe) = %v", err)
 	}
 
 	errBytes, err := io.ReadAll(errPipe)
-	klog.Infof("ReadAll(errPipe) = %v, %s", err, errBytes)
+	klog.Infof("dotSVG: ReadAll(errPipe) = %v (%q)", err, string(errBytes))
 
 	<-cmdDone
 	if cmdErr != nil {

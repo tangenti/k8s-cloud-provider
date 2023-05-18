@@ -49,6 +49,17 @@ type DiffResult struct {
 // HasDiff is true if the result is has a diff.
 func (r *DiffResult) HasDiff() bool { return len(r.Items) > 0 }
 
+// Field returns a diff item for the field if there is a match, otherwise nil.
+// TODO: unit test XXX
+func (r *DiffResult) Field(p Path) *DiffItem {
+	for _, item := range r.Items {
+		if p.Equal(item.Path) {
+			return &item
+		}
+	}
+	return nil
+}
+
 func (r *DiffResult) add(state DiffItemState, p Path, a, b reflect.Value) {
 	di := DiffItem{
 		State: state,

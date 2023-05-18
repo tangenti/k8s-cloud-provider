@@ -135,10 +135,30 @@ func (node *ForwardingRuleNode) Diff(gotNode Node) (*PlanDetails, error) {
 	}
 
 	if diff.HasDiff() {
-		// TODO:
+		var changed struct{ target, labels, other bool }
+		for _, item := range diff.Items {
+			switch {
+			case api.Path{}.Pointer().Field("Target").Equal(item.Path):
+				changed.target = true
+			case api.Path{}.Pointer().Field("Labels").Equal(item.Path):
+				changed.labels = true
+			default:
+				klog.Errorf("XXX other = %v", item)
+				changed.other = true
+			}
+		}
+
+		if !changed.other {
+			return &PlanDetails{
+				Operation: OpUpdate,
+				Why:       fmt.Sprintf("update in place (changed=%+v)", changed),
+				Diff:      diff,
+			}, nil
+		}
+
 		return &PlanDetails{
 			Operation: OpRecreate,
-			Why:       "ForwardingRule needs to be recreated (no update method exists)",
+			Why:       "needs to be recreated",
 			Diff:      diff,
 		}, nil
 	}
@@ -154,7 +174,7 @@ func (node *ForwardingRuleNode) Actions(got Node) ([]exec.Action, error) {
 
 	switch op {
 	case OpCreate:
-		return opCreateActions[compute.ForwardingRule, alpha.ForwardingRule, beta.ForwardingRule](&forwardingRuleOps{}, node, node.resource)
+		return node.createActions(got)
 
 	case OpDelete:
 		return opDeleteActions[compute.ForwardingRule, alpha.ForwardingRule, beta.ForwardingRule](&forwardingRuleOps{}, got, node)
@@ -166,10 +186,152 @@ func (node *ForwardingRuleNode) Actions(got Node) ([]exec.Action, error) {
 		return opRecreateActions[compute.ForwardingRule, alpha.ForwardingRule, beta.ForwardingRule](&forwardingRuleOps{}, got, node, node.resource)
 
 	case OpUpdate:
-		// TODO
+		return node.updateActions(got)
 	}
 
 	return nil, fmt.Errorf("ForwardingRule: invalid plan op %s", op)
+}
+
+func (node *ForwardingRuleNode) createActions(got Node) ([]exec.Action, error) {
+	return opCreateActions[compute.ForwardingRule, alpha.ForwardingRule, beta.ForwardingRule](&forwardingRuleOps{}, node, node.resource)
+}
+
+type forwardingRuleUpdateAction struct {
+	exec.ActionBase
+
+	id *cloud.ResourceID
+	// target if non-empty will call setTarget(),
+	target *cloud.ResourceID
+	// oldTarget is the previous target before the update.
+	oldTarget *cloud.ResourceID
+
+	// labels if non-nil will call setLabels().
+	labels map[string]string
+}
+
+func (act *forwardingRuleUpdateAction) Run(ctx context.Context, cl cloud.Cloud) ([]exec.Event, error) {
+	// TODO: project routing.
+	if act.labels != nil {
+		switch act.id.Key.Type() {
+		case meta.Global:
+			err := cl.GlobalForwardingRules().SetLabels(ctx, act.id.Key, &compute.GlobalSetLabelsRequest{
+				LabelFingerprint: "XXX",
+				Labels:           act.labels,
+			})
+			if err != nil {
+				return nil, fmt.Errorf("forwardingRuleUpdateAction Run(%s): SetLabels: %w", act.id, err)
+			}
+		case meta.Regional:
+			err := cl.ForwardingRules().SetLabels(ctx, act.id.Key, &compute.RegionSetLabelsRequest{
+				LabelFingerprint: "XXX",
+				Labels:           act.labels,
+			})
+			if err != nil {
+				return nil, fmt.Errorf("forwardingRuleUpdateAction Run(%s): SetLabels: %w", act.id, err)
+			}
+		default:
+			return nil, fmt.Errorf("forwardingRuleUpdateAction Run(%s): invalid key type", act.id)
+		}
+	}
+
+	if act.target != nil {
+		switch act.id.Key.Type() {
+		case meta.Global:
+			err := cl.GlobalForwardingRules().SetTarget(ctx, act.id.Key, &compute.TargetReference{
+				Target: act.target.SelfLink(meta.VersionGA),
+			})
+			if err != nil {
+				return nil, fmt.Errorf("forwardingRuleUpdateAction Run(%s): SetTarget: %w", act.id, err)
+			}
+		case meta.Regional:
+			err := cl.GlobalForwardingRules().SetTarget(ctx, act.id.Key, &compute.TargetReference{
+				Target: act.target.SelfLink(meta.VersionGA),
+			})
+			if err != nil {
+				return nil, fmt.Errorf("forwardingRuleUpdateAction Run(%s): SetTarget: %w", act.id, err)
+			}
+		default:
+			return nil, fmt.Errorf("forwardingRuleUpdateAction Run(%s): invalid key type", act.id)
+		}
+	}
+
+	var events []exec.Event
+	if act.oldTarget != nil {
+		events = append(events, exec.NewDropRefEvent(act.id, act.oldTarget))
+	}
+
+	return events, nil
+}
+
+func (act *forwardingRuleUpdateAction) DryRun() []exec.Event {
+	// TODO
+	return nil
+}
+func (act *forwardingRuleUpdateAction) String() string {
+	return fmt.Sprintf("ForwardingRuleUpdateAction(%s)", act.id)
+}
+func (act *forwardingRuleUpdateAction) Summary() string { return "TODO" } // TODO: delete me
+
+func parseForwardingRuleTargetValue(nodeID *cloud.ResourceID, v any) (*cloud.ResourceID, error) {
+	val, ok := v.(string)
+	if !ok {
+		return nil, fmt.Errorf("forwardingRuleNode: updateActions: node %s: bad Target type %T", nodeID, v)
+	}
+	if val == "" {
+		return nil, nil
+	}
+	target, err := cloud.ParseResourceURL(val)
+	if err != nil {
+		return nil, fmt.Errorf("forwardingRuleNode: updateActions: node %s: bad Target value %q", nodeID, val)
+	}
+	return target, nil
+}
+
+func parseForwardingRuleLabelsValue(nodeID *cloud.ResourceID, v any) (map[string]string, error) {
+	val, ok := v.(map[string]string)
+	if !ok {
+		return nil, fmt.Errorf("forwardingRuleNode: updateActions: node %s: bad Labels type %T", nodeID, v)
+	}
+	return val, nil
+}
+
+func (node *ForwardingRuleNode) updateActions(got Node) ([]exec.Action, error) {
+	details := node.LocalPlan().Details()
+	if details == nil {
+		return nil, fmt.Errorf("forwardingRuleNode: updateActions: node %s has not been planned", node.ID())
+	}
+
+	act := &forwardingRuleUpdateAction{id: node.ID()}
+
+	for _, item := range details.Diff.Items {
+		switch {
+		case api.Path{}.Pointer().Field("Target").Equal(item.Path):
+			oldTarget, err := parseForwardingRuleTargetValue(node.ID(), item.A)
+			if err != nil {
+				return nil, err
+			}
+			target, err := parseForwardingRuleTargetValue(node.ID(), item.B)
+			if err != nil {
+				return nil, err
+			}
+			act.Want = append(act.Want, exec.NewExistsEvent(target))
+			act.oldTarget = oldTarget
+			act.target = target
+		case api.Path{}.Pointer().Field("Labels").Equal(item.Path):
+			val, err := parseForwardingRuleLabelsValue(node.ID(), item.B)
+			if err != nil {
+				return nil, err
+			}
+			act.labels = val
+		default:
+			return nil, fmt.Errorf("forwardingRuleNode: updateActions: node %s: bad Fields type %T", node.ID(), item.B)
+		}
+	}
+
+	return []exec.Action{
+		exec.NewExistsEventOnlyAction(node.ID()),
+		act,
+	}, nil
 }
 
 // https://cloud.google.com/compute/docs/reference/rest/beta/forwardingRules

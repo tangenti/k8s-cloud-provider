@@ -42,6 +42,9 @@ type FrozenResource[GA any, Alpha any, Beta any] interface {
 	// currently supported.
 	Diff(other FrozenResource[GA, Alpha, Beta]) (*DiffResult, error)
 
+	// Clone returns an exact structural copy of this resource.
+	// Clone() FrozenResource[GA, Alpha, Beta] XXX
+
 	// TypeTrait returns the type trait for this resource.
 	TypeTrait() TypeTrait[GA, Alpha, Beta]
 }
@@ -121,3 +124,12 @@ func (obj *frozenResource[GA, Alpha, Beta]) Diff(other FrozenResource[GA, Alpha,
 
 	return nil, fmt.Errorf("invalid versions (got a.Version=%s, b.Version=%s)", obj.Version(), other.Version())
 }
+
+/*
+func (obj *frozenResource[GA, Alpha, Beta]) Clone() FrozenResource[GA, Alpha, Beta] {
+	return &frozenResource[GA, Alpha, Beta]{
+		x:   obj.Clone(),
+		ver: obj.ver,
+	}
+}
+*/

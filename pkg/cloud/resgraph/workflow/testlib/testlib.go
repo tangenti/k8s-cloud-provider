@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package testcase
+package testlib
 
 import (
 	"sort"
@@ -24,14 +24,22 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/resgraph/exec"
 )
 
+// TestCase for a given sequence of configurations.
 type TestCase struct {
-	Name        string
+	// Name of the TestCase. The format should be
+	// "<category>/<test-case>/<subtestcase>". This allows for easy filter by
+	// prefix matching.
+	Name string
+	// Description is a human-readable description of what is being tested.
 	Description string
 	Steps       []Step
 }
 
+// Step in the configuration changes.
 type Step struct {
 	Description string
+	// SetUp if non-nil will be called with the cloud interface. Use this to
+	// modify the environment, manipulate objects, etc.
 	SetUp       func(cloud.Cloud)
 	Graph       *resgraph.Graph
 	WantActions []exec.Action

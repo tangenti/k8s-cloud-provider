@@ -25,9 +25,9 @@ import (
 // LocalPlan for what will be done to the Node.
 type LocalPlan struct {
 	operation Operation
-	// action is a history of Actions that were planned, including previous
-	// values Set().
-	action []PlanDetails
+	// details is a history of Actions that were planned, including previous
+	// values Set(). The current plan is at the end of this list.
+	details []PlanDetails
 }
 
 // Operation to perform on the Node.
@@ -67,28 +67,37 @@ type PlanDetails struct {
 // Op to perform.
 func (p *LocalPlan) Op() Operation { return p.operation }
 
+// Details returns details on the current plan.
+func (p *LocalPlan) Details() *PlanDetails {
+	if len(p.details) == 0 {
+		return nil
+	}
+	// The latest plan is at the end of the list.
+	return &p.details[len(p.details)-1]
+}
+
 // Set the plan to the specified action.
 func (p *LocalPlan) Set(a PlanDetails) {
 	// TODO: this needs to change the set of actions.
 	p.operation = a.Operation
 	// Save the pervious actions for debugging.
-	p.action = append(p.action, a)
+	p.details = append(p.details, a)
 }
 
 func (p *LocalPlan) String() string {
-	if p == nil || len(p.action) == 0 {
+	if p == nil || len(p.details) == 0 {
 		return "no plan"
 	}
-	curAction := p.action[len(p.action)-1]
+	curAction := p.details[len(p.details)-1]
 	return fmt.Sprintf("%+v", curAction)
 }
 
 // GraphvizString returns a Graphviz compatible summary of the plan.
 func (p *LocalPlan) GraphvizString() string {
-	if p == nil || len(p.action) == 0 {
+	if p == nil || len(p.details) == 0 {
 		return "no plan"
 	}
-	curAction := p.action[len(p.action)-1]
+	curAction := p.details[len(p.details)-1]
 	var s string
 	s += fmt.Sprintf("%s: %s", p.operation, curAction.Why)
 	if curAction.Diff != nil {

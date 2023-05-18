@@ -47,6 +47,12 @@ func NewMutableAddress(project string, key *meta.Key) MutableAddress {
 
 type Address = api.FrozenResource[compute.Address, alpha.Address, beta.Address]
 
+// AddressNode represents an instance of a compute.Address resource.
+//
+// Scopes: global, regional.
+//
+// Unimplemented fields and methods:
+// - .Labels, setLabels(). Impacts CreateAction, Diff and Update.
 type AddressNode struct {
 	nodeBase[compute.Address, alpha.Address, beta.Address]
 }
@@ -83,7 +89,6 @@ func (node *AddressNode) Diff(gotNode Node) (*PlanDetails, error) {
 	}
 
 	if diff.HasDiff() {
-		// TODO: handle set labels with an update operation.
 		return &PlanDetails{
 			Operation: OpRecreate,
 			Why:       "Address needs to be recreated (no update method exists)",
@@ -98,12 +103,12 @@ func (node *AddressNode) Diff(gotNode Node) (*PlanDetails, error) {
 }
 
 func (node *AddressNode) Actions(got Node) ([]exec.Action, error) {
-	// TODO: got is needed for fingerprint
-
 	op := node.LocalPlan().Op()
 
 	switch op {
 	case OpCreate:
+		// TODO: .Labels can only be updated via the setLabels method. This is
+		// currently in Beta and we don't support it.
 		return opCreateActions[compute.Address, alpha.Address, beta.Address](&addressOps{}, node, node.resource)
 
 	case OpDelete:
@@ -116,7 +121,7 @@ func (node *AddressNode) Actions(got Node) ([]exec.Action, error) {
 		return opRecreateActions[compute.Address, alpha.Address, beta.Address](&addressOps{}, got, node, node.resource)
 
 	case OpUpdate:
-		// TODO
+		return nil, fmt.Errorf("%s is not supported for Address", op)
 	}
 
 	return nil, fmt.Errorf("AddressNode: invalid plan op %s", op)
