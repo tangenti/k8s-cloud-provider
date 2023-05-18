@@ -106,7 +106,7 @@ func TestLB(t *testing.T) {
 		got:   resgraph.New(),
 		want:  gr,
 	}
-	actions, err := pl.plan(context.Background())
+	res, err := pl.plan(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -116,7 +116,7 @@ func TestLB(t *testing.T) {
 	}
 
 	var viz exec.VizTracer
-	ex := exec.NewSerialExecutor(actions, exec.DryRunOption(true), exec.TracerOption(&viz))
+	ex := exec.NewSerialExecutor(res.Actions, exec.DryRunOption(true), exec.TracerOption(&viz))
 	pending, err := ex.Run(nil, nil)
 	for _, p := range pending {
 		t.Logf("%s", p.Summary())

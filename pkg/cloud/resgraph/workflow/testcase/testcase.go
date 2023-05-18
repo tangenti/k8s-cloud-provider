@@ -17,27 +17,46 @@ limitations under the License.
 package testcase
 
 import (
+	"sort"
+
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
-	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync"
-	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/exec"
+	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/resgraph"
+	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/resgraph/exec"
 )
 
-type TestCase interface {
-	Name() string
-	Description() string
-	Steps() []Step
+type TestCase struct {
+	Name        string
+	Description string
+	Steps       []Step
 }
 
-type Step interface {
-	SetUp(cloud.Cloud)
-	Graph() *sync.Graph
-
-	WantActions() []exec.Action
+type Step struct {
+	SetUp       func(cloud.Cloud)
+	Graph       *resgraph.Graph
+	WantActions []exec.Action
 }
 
 var (
-	testCaseLock sync.Mutex
-	allTestCases []TestCase
+	all map[string]*TestCase
 )
 
-func Register(tc TestCase)
+func init() { all = map[string]*TestCase{} }
+
+func Register(tc *TestCase) { all[tc.Name] = tc }
+func Cases() []*TestCase {
+	var keys []string
+	for k := range all {
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+
+	var ret []*TestCase
+	for _, k := range keys {
+		ret = append(ret, all[k])
+	}
+
+	return ret
+}
+
+func Case(name string) *TestCase { return all[name] }

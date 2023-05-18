@@ -28,9 +28,15 @@ import (
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/resgraph/exec"
 )
 
+type Result struct {
+	Got     *resgraph.Graph
+	Want    *resgraph.Graph
+	Actions []exec.Action
+}
+
 // Do will plan updates to cloud resources wanted in graph. Returns the set of
 // Actions needed to sync to "want".
-func Do(ctx context.Context, c cloud.Cloud, want *resgraph.Graph) ([]exec.Action, error) {
+func Do(ctx context.Context, c cloud.Cloud, want *resgraph.Graph) (*Result, error) {
 	w := planner{
 		cloud: c,
 		want:  want,
@@ -46,7 +52,7 @@ type planner struct {
 	want  *resgraph.Graph
 }
 
-func (pl *planner) plan(ctx context.Context) ([]exec.Action, error) {
+func (pl *planner) plan(ctx context.Context) (*Result, error) {
 	// Assemble the "got" graph. This will get the current state of any
 	// resources and also enumerate any resouces that are currently linked that
 	// are not in the "want" graph.
@@ -99,7 +105,11 @@ func (pl *planner) plan(ctx context.Context) ([]exec.Action, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", errPrefix, err)
 	}
-	return actions, nil
+	return &Result{
+		Got:     pl.got,
+		Want:    pl.want,
+		Actions: actions,
+	}, nil
 }
 
 // propagateRecreates through inbound references. If a resource needs to be
