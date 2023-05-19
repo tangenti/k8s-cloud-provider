@@ -22,9 +22,8 @@ import (
 	"strings"
 
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
-	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync"
-	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/algo/localplan"
-	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync/algo/trclosure"
+	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/resgraph/algo/localplan"
+	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/resgraph/algo/trclosure"
 	"google.golang.org/api/compute/v1"
 	"k8s.io/klog/v2"
 )

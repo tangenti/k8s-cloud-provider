@@ -23,7 +23,6 @@ import (
 
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
 	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/meta"
-	"github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud/sync"
 	"google.golang.org/api/compute/v1"
 )
 
