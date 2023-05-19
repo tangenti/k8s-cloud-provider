@@ -35,14 +35,16 @@ import (
 )
 
 const (
-	gofmt               = "gofmt"
-	packageRoot         = "github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
-	googleAPIPackage    = "google.golang.org/api/googleapi"
-	kLogPackage         = "k8s.io/klog/v2"
-	alphaComputePackage = "google.golang.org/api/compute/v0.alpha"
-	betaComputePackage  = "google.golang.org/api/compute/v0.beta"
-	gaComputePackage    = "google.golang.org/api/compute/v1"
-	kLogEnabled         = ".Enabled()"
+	gofmt                      = "gofmt"
+	packageRoot                = "github.com/GoogleCloudPlatform/k8s-cloud-provider/pkg/cloud"
+	googleAPIPackage           = "google.golang.org/api/googleapi"
+	kLogPackage                = "k8s.io/klog/v2"
+	alphaComputePackage        = "google.golang.org/api/compute/v0.alpha"
+	betaComputePackage         = "google.golang.org/api/compute/v0.beta"
+	gaComputePackage           = "google.golang.org/api/compute/v1"
+	betaNetworkServicesPackage = "google.golang.org/api/networkservices/v1beta1"
+	gaNetworkServicesPackage   = "google.golang.org/api/networkservices/v1"
+	kLogEnabled                = ".Enabled()"
 
 	filterPackage = packageRoot + "/filter"
 	metaPackage   = packageRoot + "/meta"
@@ -126,17 +128,28 @@ import (
 		panic(err)
 	}
 
-	var hasGA, hasAlpha, hasBeta bool
+	var hasGA, hasAlpha, hasBeta, hasNetworkServicesGA, hasNetworkServicesBeta bool
 	for _, s := range meta.AllServices {
-		switch s.Version() {
-		case meta.VersionGA:
-			hasGA = true
-		case meta.VersionAlpha:
-			hasAlpha = true
-		case meta.VersionBeta:
-			hasBeta = true
+		if s.APIGroup == meta.NetworkServicesAPIGroup {
+			switch s.Version() {
+			case meta.VersionBeta:
+				hasNetworkServicesBeta = true
+			case meta.VersionGA:
+				hasNetworkServicesGA = true
+			}
+
+		} else {
+			switch s.Version() {
+			case meta.VersionAlpha:
+				hasAlpha = true
+			case meta.VersionBeta:
+				hasBeta = true
+			case meta.VersionGA:
+				hasGA = true
+			}
 		}
 	}
+
 	if hasAlpha {
 		fmt.Fprintf(wr, "	alpha \"%s\"\n", alphaComputePackage)
 	}
@@ -145,6 +158,12 @@ import (
 	}
 	if hasGA {
 		fmt.Fprintf(wr, "	ga \"%s\"\n", gaComputePackage)
+	}
+	if hasNetworkServicesBeta {
+		fmt.Fprintf(wr, "	networkservicesbeta \"%s\"\n", betaNetworkServicesPackage)
+	}
+	if hasNetworkServicesGA {
+		fmt.Fprintf(wr, "	networkservicesga \"%s\"\n", gaNetworkServicesPackage)
 	}
 
 	fmt.Fprintf(wr, ")\n\n")
@@ -750,15 +769,19 @@ func (g *{{.GCEWrapType}}) Get(ctx context.Context, key *meta.Key) (*{{.FQObject
 		klog.V(4).Infof("{{.GCEWrapType}}.Get(%v, %v): RateLimiter error: %v", ctx, key, err)
 		return nil, err
 	}
-
-{{- if .KeyIsGlobal}}
-	call := g.s.{{.VersionTitle}}.{{.Service}}.Get(projectID, key.Name)
-{{- end -}}
-{{- if .KeyIsRegional}}
-	call := g.s.{{.VersionTitle}}.{{.Service}}.Get(projectID, key.Region, key.Name)
-{{- end -}}
-{{- if .KeyIsZonal}}
-	call := g.s.{{.VersionTitle}}.{{.Service}}.Get(projectID, key.Zone, key.Name)
+{{- if .IsNetworkServices}}
+	name := fmt.Sprintf("projects/%s/locations/global/{{.Service}}/%s", projectID, key.Name)
+	call := g.s.{{.GroupVersionTitle}}.{{.Service}}.Get(name)
+{{- else}}
+	{{- if .KeyIsGlobal}}
+		call := g.s.{{.GroupVersionTitle}}.{{.Service}}.Get(projectID, key.Name)
+	{{- end -}}
+	{{- if .KeyIsRegional}}
+		call := g.s.{{.GroupVersionTitle}}.{{.Service}}.Get(projectID, key.Region, key.Name)
+	{{- end -}}
+	{{- if .KeyIsZonal}}
+		call := g.s.{{.GroupVersionTitle}}.{{.Service}}.Get(projectID, key.Zone, key.Name)
+	{{- end}}
 {{- end}}
 	call.Context(ctx)
 	v, err := call.Do()
@@ -800,23 +823,26 @@ func (g *{{.GCEWrapType}}) List(ctx context.Context, zone string, fl *filter.F) 
 
 {{- if .KeyIsGlobal}}
 	klog.V(5).Infof("{{.GCEWrapType}}.List(%v, %v): projectID = %v, ck = %+v", ctx, fl, projectID, ck)
-	call := g.s.{{.VersionTitle}}.{{.Service}}.List(projectID)
+	call := g.s.{{.GroupVersionTitle}}.{{.Service}}.List(projectID)
 {{- end -}}
 {{- if .KeyIsRegional}}
 	klog.V(5).Infof("{{.GCEWrapType}}.List(%v, %v, %v): projectID = %v, ck = %+v", ctx, region, fl, projectID, ck)
-	call := g.s.{{.VersionTitle}}.{{.Service}}.List(projectID, region)
+	call := g.s.{{.GroupVersionTitle}}.{{.Service}}.List(projectID, region)
 {{- end -}}
 {{- if .KeyIsZonal}}
 	klog.V(5).Infof("{{.GCEWrapType}}.List(%v, %v, %v): projectID = %v, ck = %+v", ctx, zone, fl, projectID, ck)
-	call := g.s.{{.VersionTitle}}.{{.Service}}.List(projectID, zone)
+	call := g.s.{{.GroupVersionTitle}}.{{.Service}}.List(projectID, zone)
 {{- end}}
+{{- if not .IsNetworkServices }}
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+{{- end}}
+
 	var all []*{{.FQObjectType}}
 	f := func(l *{{.ObjectListType}}) error {
 		klog.V(5).Infof("{{.GCEWrapType}}.List(%v, ..., %v): page %+v", ctx, fl, l)
-		all = append(all, l.Items...)
+		all = append(all, l.{{.ListItemName}}...)
 		return nil
 	}
 	if err := call.Pages(ctx, f); err != nil {
@@ -868,14 +894,19 @@ func (g *{{.GCEWrapType}}) Insert(ctx context.Context, key *meta.Key, obj *{{.FQ
 	}
 	obj.Name = key.Name
 
-{{- if .KeyIsGlobal}}
-	call := g.s.{{.VersionTitle}}.{{.Service}}.Insert(projectID, obj)
-{{- end -}}
-{{- if .KeyIsRegional}}
-	call := g.s.{{.VersionTitle}}.{{.Service}}.Insert(projectID, key.Region, obj)
-{{- end -}}
-{{- if .KeyIsZonal}}
-	call := g.s.{{.VersionTitle}}.{{.Service}}.Insert(projectID, key.Zone, obj)
+{{- if .IsNetworkServices}}
+	parent := fmt.Sprintf("projects/%s/locations/global", projectID)
+	call := g.s.{{.GroupVersionTitle}}.{{.Service}}.Create(parent, obj)
+{{- else}}
+	{{- if .KeyIsGlobal}}
+	call := g.s.{{.GroupVersionTitle}}.{{.Service}}.Insert(projectID, obj)
+	{{- end -}}
+	{{- if .KeyIsRegional}}
+	call := g.s.{{.GroupVersionTitle}}.{{.Service}}.Insert(projectID, key.Region, obj)
+	{{- end -}}
+	{{- if .KeyIsZonal}}
+	call := g.s.{{.GroupVersionTitle}}.{{.Service}}.Insert(projectID, key.Zone, obj)
+	{{- end}}
 {{- end}}
 	call.Context(ctx)
 
@@ -916,16 +947,21 @@ func (g *{{.GCEWrapType}}) Delete(ctx context.Context, key *meta.Key) error {
 		klog.V(4).Infof("{{.GCEWrapType}}.Delete(%v, %v): RateLimiter error: %v", ctx, key, err)
 		return err
 	}
-
-{{- if .KeyIsGlobal}}
-	call := g.s.{{.VersionTitle}}.{{.Service}}.Delete(projectID, key.Name)
-{{end -}}
-{{- if .KeyIsRegional}}
-	call := g.s.{{.VersionTitle}}.{{.Service}}.Delete(projectID, key.Region, key.Name)
-{{- end -}}
-{{- if .KeyIsZonal}}
-	call := g.s.{{.VersionTitle}}.{{.Service}}.Delete(projectID, key.Zone, key.Name)
+{{- if .IsNetworkServices}}
+	name := fmt.Sprintf("projects/%s/locations/global/{{.Service}}/%s", projectID, key.Name)
+	call := g.s.{{.GroupVersionTitle}}.{{.Service}}.Delete(name)
+{{- else}}
+	{{- if .KeyIsGlobal}}
+	call := g.s.{{.GroupVersionTitle}}.{{.Service}}.Delete(projectID, key.Name)
+	{{end -}}
+	{{- if .KeyIsRegional}}
+	call := g.s.{{.GroupVersionTitle}}.{{.Service}}.Delete(projectID, key.Region, key.Name)
+	{{- end -}}
+	{{- if .KeyIsZonal}}
+	call := g.s.{{.GroupVersionTitle}}.{{.Service}}.Delete(projectID, key.Zone, key.Name)
+	{{- end}}
 {{- end}}
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -964,7 +1000,7 @@ func (g *{{.GCEWrapType}}) AggregatedList(ctx context.Context, fl *filter.F) (ma
 		return nil, err
 	}
 
-	call := g.s.{{.VersionTitle}}.{{.Service}}.AggregatedList(projectID)
+	call := g.s.{{.GroupVersionTitle}}.{{.Service}}.AggregatedList(projectID)
 	call.Context(ctx)
 	if fl != filter.None {
 		call.Filter(fl.String())
@@ -1015,7 +1051,7 @@ func (g *{{.GCEWrapType}}) ListUsable(ctx context.Context, fl *filter.F) ([]*{{.
 	}
 
 	klog.V(5).Infof("{{.GCEWrapType}}.ListUsable(%v, %v): projectID = %v, ck = %+v", ctx, fl, projectID, ck)
-	call := g.s.{{.VersionTitle}}.{{.Service}}.ListUsable(projectID)
+	call := g.s.{{.GroupVersionTitle}}.{{.Service}}.ListUsable(projectID)
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
@@ -1081,14 +1117,19 @@ func (g *{{.GCEWrapType}}) {{.FcnArgs}} {
 	{{- end}}
 	}
 
-{{- if .KeyIsGlobal}}
-	call := g.s.{{.VersionTitle}}.{{.Service}}.{{.Name}}(projectID, key.Name {{.CallArgs}})
-{{- end -}}
-{{- if .KeyIsRegional}}
-	call := g.s.{{.VersionTitle}}.{{.Service}}.{{.Name}}(projectID, key.Region, key.Name {{.CallArgs}})
-{{- end -}}
-{{- if .KeyIsZonal}}
-	call := g.s.{{.VersionTitle}}.{{.Service}}.{{.Name}}(projectID, key.Zone, key.Name {{.CallArgs}})
+{{- if .IsNetworkServices}}
+	name := fmt.Sprintf("projects/%s/locations/global/{{.Service}}/%s", projectID, key.Name)
+	call := g.s.{{.GroupVersionTitle}}.{{.Service}}.{{.Name}}(name {{.CallArgs}})
+{{- else}}
+	{{- if .KeyIsGlobal}}
+	call := g.s.{{.GroupVersionTitle}}.{{.Service}}.{{.Name}}(projectID, key.Name {{.CallArgs}})
+	{{- end -}}
+	{{- if .KeyIsRegional}}
+	call := g.s.{{.GroupVersionTitle}}.{{.Service}}.{{.Name}}(projectID, key.Region, key.Name {{.CallArgs}})
+	{{- end -}}
+	{{- if .KeyIsZonal}}
+	call := g.s.{{.GroupVersionTitle}}.{{.Service}}.{{.Name}}(projectID, key.Zone, key.Name {{.CallArgs}})
+	{{- end}}
 {{- end}}
 {{- if .IsOperation}}
 	call.Context(ctx)

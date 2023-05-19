@@ -34,6 +34,8 @@ import (
 	alpha "google.golang.org/api/compute/v0.alpha"
 	beta "google.golang.org/api/compute/v0.beta"
 	ga "google.golang.org/api/compute/v1"
+	networkservicesga "google.golang.org/api/networkservices/v1"
+	networkservicesbeta "google.golang.org/api/networkservices/v1beta1"
 )
 
 func kLogEnabled(level klog.Level) bool {
@@ -133,6 +135,10 @@ type Cloud interface {
 	BetaRegionUrlMaps() BetaRegionUrlMaps
 	RegionUrlMaps() RegionUrlMaps
 	Zones() Zones
+	TcpRoutes() TcpRoutes
+	BetaTcpRoutes() BetaTcpRoutes
+	Meshes() Meshes
+	BetaMeshes() BetaMeshes
 }
 
 // NewGCE returns a GCE.
@@ -229,6 +235,10 @@ func NewGCE(s *Service) *GCE {
 		gceBetaRegionUrlMaps:                  &GCEBetaRegionUrlMaps{s},
 		gceRegionUrlMaps:                      &GCERegionUrlMaps{s},
 		gceZones:                              &GCEZones{s},
+		gceTcpRoutes:                          &GCETcpRoutes{s},
+		gceBetaTcpRoutes:                      &GCEBetaTcpRoutes{s},
+		gceMeshes:                             &GCEMeshes{s},
+		gceBetaMeshes:                         &GCEBetaMeshes{s},
 	}
 	return g
 }
@@ -329,6 +339,10 @@ type GCE struct {
 	gceBetaRegionUrlMaps                  *GCEBetaRegionUrlMaps
 	gceRegionUrlMaps                      *GCERegionUrlMaps
 	gceZones                              *GCEZones
+	gceTcpRoutes                          *GCETcpRoutes
+	gceBetaTcpRoutes                      *GCEBetaTcpRoutes
+	gceMeshes                             *GCEMeshes
+	gceBetaMeshes                         *GCEBetaMeshes
 }
 
 // Addresses returns the interface for the ga Addresses.
@@ -786,6 +800,26 @@ func (gce *GCE) Zones() Zones {
 	return gce.gceZones
 }
 
+// TcpRoutes returns the interface for the ga TcpRoutes.
+func (gce *GCE) TcpRoutes() TcpRoutes {
+	return gce.gceTcpRoutes
+}
+
+// BetaTcpRoutes returns the interface for the beta TcpRoutes.
+func (gce *GCE) BetaTcpRoutes() BetaTcpRoutes {
+	return gce.gceBetaTcpRoutes
+}
+
+// Meshes returns the interface for the ga Meshes.
+func (gce *GCE) Meshes() Meshes {
+	return gce.gceMeshes
+}
+
+// BetaMeshes returns the interface for the beta Meshes.
+func (gce *GCE) BetaMeshes() BetaMeshes {
+	return gce.gceBetaMeshes
+}
+
 // NewMockGCE returns a new mock for GCE.
 func NewMockGCE(projectRouter ProjectRouter) *MockGCE {
 	mockAddressesObjs := map[meta.Key]*MockAddressesObj{}
@@ -803,6 +837,7 @@ func NewMockGCE(projectRouter ProjectRouter) *MockGCE {
 	mockInstanceGroupsObjs := map[meta.Key]*MockInstanceGroupsObj{}
 	mockInstanceTemplatesObjs := map[meta.Key]*MockInstanceTemplatesObj{}
 	mockInstancesObjs := map[meta.Key]*MockInstancesObj{}
+	mockMeshesObjs := map[meta.Key]*MockMeshesObj{}
 	mockNetworkEndpointGroupsObjs := map[meta.Key]*MockNetworkEndpointGroupsObj{}
 	mockNetworkFirewallPoliciesObjs := map[meta.Key]*MockNetworkFirewallPoliciesObj{}
 	mockNetworksObjs := map[meta.Key]*MockNetworksObj{}
@@ -827,6 +862,7 @@ func NewMockGCE(projectRouter ProjectRouter) *MockGCE {
 	mockTargetHttpsProxiesObjs := map[meta.Key]*MockTargetHttpsProxiesObj{}
 	mockTargetPoolsObjs := map[meta.Key]*MockTargetPoolsObj{}
 	mockTargetTcpProxiesObjs := map[meta.Key]*MockTargetTcpProxiesObj{}
+	mockTcpRoutesObjs := map[meta.Key]*MockTcpRoutesObj{}
 	mockUrlMapsObjs := map[meta.Key]*MockUrlMapsObj{}
 	mockZonesObjs := map[meta.Key]*MockZonesObj{}
 
@@ -922,6 +958,10 @@ func NewMockGCE(projectRouter ProjectRouter) *MockGCE {
 		MockBetaRegionUrlMaps:                  NewMockBetaRegionUrlMaps(projectRouter, mockRegionUrlMapsObjs),
 		MockRegionUrlMaps:                      NewMockRegionUrlMaps(projectRouter, mockRegionUrlMapsObjs),
 		MockZones:                              NewMockZones(projectRouter, mockZonesObjs),
+		MockTcpRoutes:                          NewMockTcpRoutes(projectRouter, mockTcpRoutesObjs),
+		MockBetaTcpRoutes:                      NewMockBetaTcpRoutes(projectRouter, mockTcpRoutesObjs),
+		MockMeshes:                             NewMockMeshes(projectRouter, mockMeshesObjs),
+		MockBetaMeshes:                         NewMockBetaMeshes(projectRouter, mockMeshesObjs),
 	}
 	return mock
 }
@@ -1022,6 +1062,10 @@ type MockGCE struct {
 	MockBetaRegionUrlMaps                  *MockBetaRegionUrlMaps
 	MockRegionUrlMaps                      *MockRegionUrlMaps
 	MockZones                              *MockZones
+	MockTcpRoutes                          *MockTcpRoutes
+	MockBetaTcpRoutes                      *MockBetaTcpRoutes
+	MockMeshes                             *MockMeshes
+	MockBetaMeshes                         *MockBetaMeshes
 }
 
 // Addresses returns the interface for the ga Addresses.
@@ -1477,6 +1521,26 @@ func (mock *MockGCE) RegionUrlMaps() RegionUrlMaps {
 // Zones returns the interface for the ga Zones.
 func (mock *MockGCE) Zones() Zones {
 	return mock.MockZones
+}
+
+// TcpRoutes returns the interface for the ga TcpRoutes.
+func (mock *MockGCE) TcpRoutes() TcpRoutes {
+	return mock.MockTcpRoutes
+}
+
+// BetaTcpRoutes returns the interface for the beta TcpRoutes.
+func (mock *MockGCE) BetaTcpRoutes() BetaTcpRoutes {
+	return mock.MockBetaTcpRoutes
+}
+
+// Meshes returns the interface for the ga Meshes.
+func (mock *MockGCE) Meshes() Meshes {
+	return mock.MockMeshes
+}
+
+// BetaMeshes returns the interface for the beta Meshes.
+func (mock *MockGCE) BetaMeshes() BetaMeshes {
+	return mock.MockBetaMeshes
 }
 
 // MockAddressesObj is used to store the various object versions in the shared
@@ -2009,6 +2073,39 @@ func (m *MockInstancesObj) ToGA() *ga.Instance {
 	ret := &ga.Instance{}
 	if err := copyViaJSON(ret, m.Obj); err != nil {
 		klog.Errorf("Could not convert %T to *ga.Instance via JSON: %v", m.Obj, err)
+	}
+	return ret
+}
+
+// MockMeshesObj is used to store the various object versions in the shared
+// map of mocked objects. This allows for multiple API versions to co-exist and
+// share the same "view" of the objects in the backend.
+type MockMeshesObj struct {
+	Obj interface{}
+}
+
+// ToBeta retrieves the given version of the object.
+func (m *MockMeshesObj) ToBeta() *networkservicesbeta.Mesh {
+	if ret, ok := m.Obj.(*networkservicesbeta.Mesh); ok {
+		return ret
+	}
+	// Convert the object via JSON copying to the type that was requested.
+	ret := &networkservicesbeta.Mesh{}
+	if err := copyViaJSON(ret, m.Obj); err != nil {
+		klog.Errorf("Could not convert %T to *networkservicesbeta.Mesh via JSON: %v", m.Obj, err)
+	}
+	return ret
+}
+
+// ToGA retrieves the given version of the object.
+func (m *MockMeshesObj) ToGA() *networkservicesga.Mesh {
+	if ret, ok := m.Obj.(*networkservicesga.Mesh); ok {
+		return ret
+	}
+	// Convert the object via JSON copying to the type that was requested.
+	ret := &networkservicesga.Mesh{}
+	if err := copyViaJSON(ret, m.Obj); err != nil {
+		klog.Errorf("Could not convert %T to *networkservicesga.Mesh via JSON: %v", m.Obj, err)
 	}
 	return ret
 }
@@ -2883,6 +2980,39 @@ func (m *MockTargetTcpProxiesObj) ToGA() *ga.TargetTcpProxy {
 	return ret
 }
 
+// MockTcpRoutesObj is used to store the various object versions in the shared
+// map of mocked objects. This allows for multiple API versions to co-exist and
+// share the same "view" of the objects in the backend.
+type MockTcpRoutesObj struct {
+	Obj interface{}
+}
+
+// ToBeta retrieves the given version of the object.
+func (m *MockTcpRoutesObj) ToBeta() *networkservicesbeta.TcpRoute {
+	if ret, ok := m.Obj.(*networkservicesbeta.TcpRoute); ok {
+		return ret
+	}
+	// Convert the object via JSON copying to the type that was requested.
+	ret := &networkservicesbeta.TcpRoute{}
+	if err := copyViaJSON(ret, m.Obj); err != nil {
+		klog.Errorf("Could not convert %T to *networkservicesbeta.TcpRoute via JSON: %v", m.Obj, err)
+	}
+	return ret
+}
+
+// ToGA retrieves the given version of the object.
+func (m *MockTcpRoutesObj) ToGA() *networkservicesga.TcpRoute {
+	if ret, ok := m.Obj.(*networkservicesga.TcpRoute); ok {
+		return ret
+	}
+	// Convert the object via JSON copying to the type that was requested.
+	ret := &networkservicesga.TcpRoute{}
+	if err := copyViaJSON(ret, m.Obj); err != nil {
+		klog.Errorf("Could not convert %T to *networkservicesga.TcpRoute via JSON: %v", m.Obj, err)
+	}
+	return ret
+}
+
 // MockUrlMapsObj is used to store the various object versions in the shared
 // map of mocked objects. This allows for multiple API versions to co-exist and
 // share the same "view" of the objects in the backend.
@@ -3238,6 +3368,7 @@ func (g *GCEAddresses) List(ctx context.Context, region string, fl *filter.F) ([
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.Address
 	f := func(l *ga.AddressList) error {
 		klog.V(5).Infof("GCEAddresses.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -3329,6 +3460,7 @@ func (g *GCEAddresses) Delete(ctx context.Context, key *meta.Key) error {
 		return err
 	}
 	call := g.s.GA.Addresses.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -3687,6 +3819,7 @@ func (g *GCEAlphaAddresses) List(ctx context.Context, region string, fl *filter.
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*alpha.Address
 	f := func(l *alpha.AddressList) error {
 		klog.V(5).Infof("GCEAlphaAddresses.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -3778,6 +3911,7 @@ func (g *GCEAlphaAddresses) Delete(ctx context.Context, key *meta.Key) error {
 		return err
 	}
 	call := g.s.Alpha.Addresses.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -4136,6 +4270,7 @@ func (g *GCEBetaAddresses) List(ctx context.Context, region string, fl *filter.F
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*beta.Address
 	f := func(l *beta.AddressList) error {
 		klog.V(5).Infof("GCEBetaAddresses.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -4227,6 +4362,7 @@ func (g *GCEBetaAddresses) Delete(ctx context.Context, key *meta.Key) error {
 		return err
 	}
 	call := g.s.Beta.Addresses.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -4544,6 +4680,7 @@ func (g *GCEAlphaGlobalAddresses) List(ctx context.Context, fl *filter.F) ([]*al
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*alpha.Address
 	f := func(l *alpha.AddressList) error {
 		klog.V(5).Infof("GCEAlphaGlobalAddresses.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -4901,6 +5038,7 @@ func (g *GCEBetaGlobalAddresses) List(ctx context.Context, fl *filter.F) ([]*bet
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*beta.Address
 	f := func(l *beta.AddressList) error {
 		klog.V(5).Infof("GCEBetaGlobalAddresses.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -5258,6 +5396,7 @@ func (g *GCEGlobalAddresses) List(ctx context.Context, fl *filter.F) ([]*ga.Addr
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.Address
 	f := func(l *ga.AddressList) error {
 		klog.V(5).Infof("GCEGlobalAddresses.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -5713,6 +5852,7 @@ func (g *GCEBackendServices) List(ctx context.Context, fl *filter.F) ([]*ga.Back
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.BackendService
 	f := func(l *ga.BackendServiceList) error {
 		klog.V(5).Infof("GCEBackendServices.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -6452,6 +6592,7 @@ func (g *GCEBetaBackendServices) List(ctx context.Context, fl *filter.F) ([]*bet
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*beta.BackendService
 	f := func(l *beta.BackendServiceList) error {
 		klog.V(5).Infof("GCEBetaBackendServices.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -7159,6 +7300,7 @@ func (g *GCEAlphaBackendServices) List(ctx context.Context, fl *filter.F) ([]*al
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*alpha.BackendService
 	f := func(l *alpha.BackendServiceList) error {
 		klog.V(5).Infof("GCEAlphaBackendServices.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -7811,6 +7953,7 @@ func (g *GCERegionBackendServices) List(ctx context.Context, region string, fl *
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.BackendService
 	f := func(l *ga.BackendServiceList) error {
 		klog.V(5).Infof("GCERegionBackendServices.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -7902,6 +8045,7 @@ func (g *GCERegionBackendServices) Delete(ctx context.Context, key *meta.Key) er
 		return err
 	}
 	call := g.s.GA.RegionBackendServices.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -8316,6 +8460,7 @@ func (g *GCEAlphaRegionBackendServices) List(ctx context.Context, region string,
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*alpha.BackendService
 	f := func(l *alpha.BackendServiceList) error {
 		klog.V(5).Infof("GCEAlphaRegionBackendServices.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -8407,6 +8552,7 @@ func (g *GCEAlphaRegionBackendServices) Delete(ctx context.Context, key *meta.Ke
 		return err
 	}
 	call := g.s.Alpha.RegionBackendServices.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -8821,6 +8967,7 @@ func (g *GCEBetaRegionBackendServices) List(ctx context.Context, region string, 
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*beta.BackendService
 	f := func(l *beta.BackendServiceList) error {
 		klog.V(5).Infof("GCEBetaRegionBackendServices.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -8912,6 +9059,7 @@ func (g *GCEBetaRegionBackendServices) Delete(ctx context.Context, key *meta.Key
 		return err
 	}
 	call := g.s.Beta.RegionBackendServices.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -9306,6 +9454,7 @@ func (g *GCEDisks) List(ctx context.Context, zone string, fl *filter.F) ([]*ga.D
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.Disk
 	f := func(l *ga.DiskList) error {
 		klog.V(5).Infof("GCEDisks.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -9397,6 +9546,7 @@ func (g *GCEDisks) Delete(ctx context.Context, key *meta.Key) error {
 		return err
 	}
 	call := g.s.GA.Disks.Delete(projectID, key.Zone, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -9717,6 +9867,7 @@ func (g *GCERegionDisks) List(ctx context.Context, region string, fl *filter.F) 
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.Disk
 	f := func(l *ga.DiskList) error {
 		klog.V(5).Infof("GCERegionDisks.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -9808,6 +9959,7 @@ func (g *GCERegionDisks) Delete(ctx context.Context, key *meta.Key) error {
 		return err
 	}
 	call := g.s.GA.RegionDisks.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -10135,6 +10287,7 @@ func (g *GCEAlphaFirewalls) List(ctx context.Context, fl *filter.F) ([]*alpha.Fi
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*alpha.Firewall
 	f := func(l *alpha.FirewallList) error {
 		klog.V(5).Infof("GCEAlphaFirewalls.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -10596,6 +10749,7 @@ func (g *GCEBetaFirewalls) List(ctx context.Context, fl *filter.F) ([]*beta.Fire
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*beta.Firewall
 	f := func(l *beta.FirewallList) error {
 		klog.V(5).Infof("GCEBetaFirewalls.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -11057,6 +11211,7 @@ func (g *GCEFirewalls) List(ctx context.Context, fl *filter.F) ([]*ga.Firewall, 
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.Firewall
 	f := func(l *ga.FirewallList) error {
 		klog.V(5).Infof("GCEFirewalls.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -11618,6 +11773,7 @@ func (g *GCEAlphaNetworkFirewallPolicies) List(ctx context.Context, fl *filter.F
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*alpha.FirewallPolicy
 	f := func(l *alpha.FirewallPolicyList) error {
 		klog.V(5).Infof("GCEAlphaNetworkFirewallPolicies.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -12552,6 +12708,7 @@ func (g *GCEAlphaRegionNetworkFirewallPolicies) List(ctx context.Context, region
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*alpha.FirewallPolicy
 	f := func(l *alpha.FirewallPolicyList) error {
 		klog.V(5).Infof("GCEAlphaRegionNetworkFirewallPolicies.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -12643,6 +12800,7 @@ func (g *GCEAlphaRegionNetworkFirewallPolicies) Delete(ctx context.Context, key 
 		return err
 	}
 	call := g.s.Alpha.RegionNetworkFirewallPolicies.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -13385,6 +13543,7 @@ func (g *GCEForwardingRules) List(ctx context.Context, region string, fl *filter
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.ForwardingRule
 	f := func(l *ga.ForwardingRuleList) error {
 		klog.V(5).Infof("GCEForwardingRules.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -13476,6 +13635,7 @@ func (g *GCEForwardingRules) Delete(ctx context.Context, key *meta.Key) error {
 		return err
 	}
 	call := g.s.GA.ForwardingRules.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -13848,6 +14008,7 @@ func (g *GCEAlphaForwardingRules) List(ctx context.Context, region string, fl *f
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*alpha.ForwardingRule
 	f := func(l *alpha.ForwardingRuleList) error {
 		klog.V(5).Infof("GCEAlphaForwardingRules.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -13939,6 +14100,7 @@ func (g *GCEAlphaForwardingRules) Delete(ctx context.Context, key *meta.Key) err
 		return err
 	}
 	call := g.s.Alpha.ForwardingRules.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -14311,6 +14473,7 @@ func (g *GCEBetaForwardingRules) List(ctx context.Context, region string, fl *fi
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*beta.ForwardingRule
 	f := func(l *beta.ForwardingRuleList) error {
 		klog.V(5).Infof("GCEBetaForwardingRules.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -14402,6 +14565,7 @@ func (g *GCEBetaForwardingRules) Delete(ctx context.Context, key *meta.Key) erro
 		return err
 	}
 	call := g.s.Beta.ForwardingRules.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -14771,6 +14935,7 @@ func (g *GCEAlphaGlobalForwardingRules) List(ctx context.Context, fl *filter.F) 
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*alpha.ForwardingRule
 	f := func(l *alpha.ForwardingRuleList) error {
 		klog.V(5).Infof("GCEAlphaGlobalForwardingRules.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -15232,6 +15397,7 @@ func (g *GCEBetaGlobalForwardingRules) List(ctx context.Context, fl *filter.F) (
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*beta.ForwardingRule
 	f := func(l *beta.ForwardingRuleList) error {
 		klog.V(5).Infof("GCEBetaGlobalForwardingRules.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -15693,6 +15859,7 @@ func (g *GCEGlobalForwardingRules) List(ctx context.Context, fl *filter.F) ([]*g
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.ForwardingRule
 	f := func(l *ga.ForwardingRuleList) error {
 		klog.V(5).Infof("GCEGlobalForwardingRules.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -16144,6 +16311,7 @@ func (g *GCEHealthChecks) List(ctx context.Context, fl *filter.F) ([]*ga.HealthC
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.HealthCheck
 	f := func(l *ga.HealthCheckList) error {
 		klog.V(5).Infof("GCEHealthChecks.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -16553,6 +16721,7 @@ func (g *GCEAlphaHealthChecks) List(ctx context.Context, fl *filter.F) ([]*alpha
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*alpha.HealthCheck
 	f := func(l *alpha.HealthCheckList) error {
 		klog.V(5).Infof("GCEAlphaHealthChecks.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -16962,6 +17131,7 @@ func (g *GCEBetaHealthChecks) List(ctx context.Context, fl *filter.F) ([]*beta.H
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*beta.HealthCheck
 	f := func(l *beta.HealthCheckList) error {
 		klog.V(5).Infof("GCEBetaHealthChecks.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -17374,6 +17544,7 @@ func (g *GCEAlphaRegionHealthChecks) List(ctx context.Context, region string, fl
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*alpha.HealthCheck
 	f := func(l *alpha.HealthCheckList) error {
 		klog.V(5).Infof("GCEAlphaRegionHealthChecks.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -17465,6 +17636,7 @@ func (g *GCEAlphaRegionHealthChecks) Delete(ctx context.Context, key *meta.Key) 
 		return err
 	}
 	call := g.s.Alpha.RegionHealthChecks.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -17785,6 +17957,7 @@ func (g *GCEBetaRegionHealthChecks) List(ctx context.Context, region string, fl 
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*beta.HealthCheck
 	f := func(l *beta.HealthCheckList) error {
 		klog.V(5).Infof("GCEBetaRegionHealthChecks.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -17876,6 +18049,7 @@ func (g *GCEBetaRegionHealthChecks) Delete(ctx context.Context, key *meta.Key) e
 		return err
 	}
 	call := g.s.Beta.RegionHealthChecks.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -18196,6 +18370,7 @@ func (g *GCERegionHealthChecks) List(ctx context.Context, region string, fl *fil
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.HealthCheck
 	f := func(l *ga.HealthCheckList) error {
 		klog.V(5).Infof("GCERegionHealthChecks.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -18287,6 +18462,7 @@ func (g *GCERegionHealthChecks) Delete(ctx context.Context, key *meta.Key) error
 		return err
 	}
 	call := g.s.GA.RegionHealthChecks.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -18604,6 +18780,7 @@ func (g *GCEHttpHealthChecks) List(ctx context.Context, fl *filter.F) ([]*ga.Htt
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.HttpHealthCheck
 	f := func(l *ga.HttpHealthCheckList) error {
 		klog.V(5).Infof("GCEHttpHealthChecks.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -19013,6 +19190,7 @@ func (g *GCEHttpsHealthChecks) List(ctx context.Context, fl *filter.F) ([]*ga.Ht
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.HttpsHealthCheck
 	f := func(l *ga.HttpsHealthCheckList) error {
 		klog.V(5).Infof("GCEHttpsHealthChecks.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -19455,6 +19633,7 @@ func (g *GCEInstanceGroups) List(ctx context.Context, zone string, fl *filter.F)
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.InstanceGroup
 	f := func(l *ga.InstanceGroupList) error {
 		klog.V(5).Infof("GCEInstanceGroups.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -19546,6 +19725,7 @@ func (g *GCEInstanceGroups) Delete(ctx context.Context, key *meta.Key) error {
 		return err
 	}
 	call := g.s.GA.InstanceGroups.Delete(projectID, key.Zone, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -20011,6 +20191,7 @@ func (g *GCEInstances) List(ctx context.Context, zone string, fl *filter.F) ([]*
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.Instance
 	f := func(l *ga.InstanceList) error {
 		klog.V(5).Infof("GCEInstances.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -20102,6 +20283,7 @@ func (g *GCEInstances) Delete(ctx context.Context, key *meta.Key) error {
 		return err
 	}
 	call := g.s.GA.Instances.Delete(projectID, key.Zone, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -20484,6 +20666,7 @@ func (g *GCEBetaInstances) List(ctx context.Context, zone string, fl *filter.F) 
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*beta.Instance
 	f := func(l *beta.InstanceList) error {
 		klog.V(5).Infof("GCEBetaInstances.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -20575,6 +20758,7 @@ func (g *GCEBetaInstances) Delete(ctx context.Context, key *meta.Key) error {
 		return err
 	}
 	call := g.s.Beta.Instances.Delete(projectID, key.Zone, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -20999,6 +21183,7 @@ func (g *GCEAlphaInstances) List(ctx context.Context, zone string, fl *filter.F)
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*alpha.Instance
 	f := func(l *alpha.InstanceList) error {
 		klog.V(5).Infof("GCEAlphaInstances.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -21090,6 +21275,7 @@ func (g *GCEAlphaInstances) Delete(ctx context.Context, key *meta.Key) error {
 		return err
 	}
 	call := g.s.Alpha.Instances.Delete(projectID, key.Zone, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -21524,6 +21710,7 @@ func (g *GCEInstanceGroupManagers) List(ctx context.Context, zone string, fl *fi
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.InstanceGroupManager
 	f := func(l *ga.InstanceGroupManagerList) error {
 		klog.V(5).Infof("GCEInstanceGroupManagers.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -21615,6 +21802,7 @@ func (g *GCEInstanceGroupManagers) Delete(ctx context.Context, key *meta.Key) er
 		return err
 	}
 	call := g.s.GA.InstanceGroupManagers.Delete(projectID, key.Zone, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -22048,6 +22236,7 @@ func (g *GCEInstanceTemplates) List(ctx context.Context, fl *filter.F) ([]*ga.In
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.InstanceTemplate
 	f := func(l *ga.InstanceTemplateList) error {
 		klog.V(5).Infof("GCEInstanceTemplates.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -22465,6 +22654,7 @@ func (g *GCEImages) List(ctx context.Context, fl *filter.F) ([]*ga.Image, error)
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.Image
 	f := func(l *ga.ImageList) error {
 		klog.V(5).Infof("GCEImages.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -23094,6 +23284,7 @@ func (g *GCEBetaImages) List(ctx context.Context, fl *filter.F) ([]*beta.Image, 
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*beta.Image
 	f := func(l *beta.ImageList) error {
 		klog.V(5).Infof("GCEBetaImages.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -23723,6 +23914,7 @@ func (g *GCEAlphaImages) List(ctx context.Context, fl *filter.F) ([]*alpha.Image
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*alpha.Image
 	f := func(l *alpha.ImageList) error {
 		klog.V(5).Infof("GCEAlphaImages.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -24292,6 +24484,7 @@ func (g *GCEAlphaNetworks) List(ctx context.Context, fl *filter.F) ([]*alpha.Net
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*alpha.Network
 	f := func(l *alpha.NetworkList) error {
 		klog.V(5).Infof("GCEAlphaNetworks.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -24649,6 +24842,7 @@ func (g *GCEBetaNetworks) List(ctx context.Context, fl *filter.F) ([]*beta.Netwo
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*beta.Network
 	f := func(l *beta.NetworkList) error {
 		klog.V(5).Infof("GCEBetaNetworks.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -25006,6 +25200,7 @@ func (g *GCENetworks) List(ctx context.Context, fl *filter.F) ([]*ga.Network, er
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.Network
 	f := func(l *ga.NetworkList) error {
 		klog.V(5).Infof("GCENetworks.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -25434,6 +25629,7 @@ func (g *GCEAlphaNetworkEndpointGroups) List(ctx context.Context, zone string, f
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*alpha.NetworkEndpointGroup
 	f := func(l *alpha.NetworkEndpointGroupList) error {
 		klog.V(5).Infof("GCEAlphaNetworkEndpointGroups.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -25525,6 +25721,7 @@ func (g *GCEAlphaNetworkEndpointGroups) Delete(ctx context.Context, key *meta.Ke
 		return err
 	}
 	call := g.s.Alpha.NetworkEndpointGroups.Delete(projectID, key.Zone, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -26048,6 +26245,7 @@ func (g *GCEBetaNetworkEndpointGroups) List(ctx context.Context, zone string, fl
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*beta.NetworkEndpointGroup
 	f := func(l *beta.NetworkEndpointGroupList) error {
 		klog.V(5).Infof("GCEBetaNetworkEndpointGroups.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -26139,6 +26337,7 @@ func (g *GCEBetaNetworkEndpointGroups) Delete(ctx context.Context, key *meta.Key
 		return err
 	}
 	call := g.s.Beta.NetworkEndpointGroups.Delete(projectID, key.Zone, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -26662,6 +26861,7 @@ func (g *GCENetworkEndpointGroups) List(ctx context.Context, zone string, fl *fi
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.NetworkEndpointGroup
 	f := func(l *ga.NetworkEndpointGroupList) error {
 		klog.V(5).Infof("GCENetworkEndpointGroups.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -26753,6 +26953,7 @@ func (g *GCENetworkEndpointGroups) Delete(ctx context.Context, key *meta.Key) er
 		return err
 	}
 	call := g.s.GA.NetworkEndpointGroups.Delete(projectID, key.Zone, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -27176,6 +27377,7 @@ func (g *GCERegions) List(ctx context.Context, fl *filter.F) ([]*ga.Region, erro
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.Region
 	f := func(l *ga.RegionList) error {
 		klog.V(5).Infof("GCERegions.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -27535,6 +27737,7 @@ func (g *GCEAlphaRouters) List(ctx context.Context, region string, fl *filter.F)
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*alpha.Router
 	f := func(l *alpha.RouterList) error {
 		klog.V(5).Infof("GCEAlphaRouters.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -27626,6 +27829,7 @@ func (g *GCEAlphaRouters) Delete(ctx context.Context, key *meta.Key) error {
 		return err
 	}
 	call := g.s.Alpha.Routers.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -28162,6 +28366,7 @@ func (g *GCEBetaRouters) List(ctx context.Context, region string, fl *filter.F) 
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*beta.Router
 	f := func(l *beta.RouterList) error {
 		klog.V(5).Infof("GCEBetaRouters.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -28253,6 +28458,7 @@ func (g *GCEBetaRouters) Delete(ctx context.Context, key *meta.Key) error {
 		return err
 	}
 	call := g.s.Beta.Routers.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -28779,6 +28985,7 @@ func (g *GCERouters) List(ctx context.Context, region string, fl *filter.F) ([]*
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.Router
 	f := func(l *ga.RouterList) error {
 		klog.V(5).Infof("GCERouters.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -28870,6 +29077,7 @@ func (g *GCERouters) Delete(ctx context.Context, key *meta.Key) error {
 		return err
 	}
 	call := g.s.GA.Routers.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -29293,6 +29501,7 @@ func (g *GCERoutes) List(ctx context.Context, fl *filter.F) ([]*ga.Route, error)
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.Route
 	f := func(l *ga.RouteList) error {
 		klog.V(5).Infof("GCERoutes.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -29700,6 +29909,7 @@ func (g *GCEBetaSecurityPolicies) List(ctx context.Context, fl *filter.F) ([]*be
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*beta.SecurityPolicy
 	f := func(l *beta.SecurityPolicyList) error {
 		klog.V(5).Infof("GCEBetaSecurityPolicies.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -30270,6 +30480,7 @@ func (g *GCEServiceAttachments) List(ctx context.Context, region string, fl *fil
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.ServiceAttachment
 	f := func(l *ga.ServiceAttachmentList) error {
 		klog.V(5).Infof("GCEServiceAttachments.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -30361,6 +30572,7 @@ func (g *GCEServiceAttachments) Delete(ctx context.Context, key *meta.Key) error
 		return err
 	}
 	call := g.s.GA.ServiceAttachments.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -30681,6 +30893,7 @@ func (g *GCEBetaServiceAttachments) List(ctx context.Context, region string, fl 
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*beta.ServiceAttachment
 	f := func(l *beta.ServiceAttachmentList) error {
 		klog.V(5).Infof("GCEBetaServiceAttachments.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -30772,6 +30985,7 @@ func (g *GCEBetaServiceAttachments) Delete(ctx context.Context, key *meta.Key) e
 		return err
 	}
 	call := g.s.Beta.ServiceAttachments.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -31092,6 +31306,7 @@ func (g *GCEAlphaServiceAttachments) List(ctx context.Context, region string, fl
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*alpha.ServiceAttachment
 	f := func(l *alpha.ServiceAttachmentList) error {
 		klog.V(5).Infof("GCEAlphaServiceAttachments.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -31183,6 +31398,7 @@ func (g *GCEAlphaServiceAttachments) Delete(ctx context.Context, key *meta.Key) 
 		return err
 	}
 	call := g.s.Alpha.ServiceAttachments.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -31490,6 +31706,7 @@ func (g *GCESslCertificates) List(ctx context.Context, fl *filter.F) ([]*ga.SslC
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.SslCertificate
 	f := func(l *ga.SslCertificateList) error {
 		klog.V(5).Infof("GCESslCertificates.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -31847,6 +32064,7 @@ func (g *GCEBetaSslCertificates) List(ctx context.Context, fl *filter.F) ([]*bet
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*beta.SslCertificate
 	f := func(l *beta.SslCertificateList) error {
 		klog.V(5).Infof("GCEBetaSslCertificates.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -32204,6 +32422,7 @@ func (g *GCEAlphaSslCertificates) List(ctx context.Context, fl *filter.F) ([]*al
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*alpha.SslCertificate
 	f := func(l *alpha.SslCertificateList) error {
 		klog.V(5).Infof("GCEAlphaSslCertificates.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -32564,6 +32783,7 @@ func (g *GCEAlphaRegionSslCertificates) List(ctx context.Context, region string,
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*alpha.SslCertificate
 	f := func(l *alpha.SslCertificateList) error {
 		klog.V(5).Infof("GCEAlphaRegionSslCertificates.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -32655,6 +32875,7 @@ func (g *GCEAlphaRegionSslCertificates) Delete(ctx context.Context, key *meta.Ke
 		return err
 	}
 	call := g.s.Alpha.RegionSslCertificates.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -32923,6 +33144,7 @@ func (g *GCEBetaRegionSslCertificates) List(ctx context.Context, region string, 
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*beta.SslCertificate
 	f := func(l *beta.SslCertificateList) error {
 		klog.V(5).Infof("GCEBetaRegionSslCertificates.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -33014,6 +33236,7 @@ func (g *GCEBetaRegionSslCertificates) Delete(ctx context.Context, key *meta.Key
 		return err
 	}
 	call := g.s.Beta.RegionSslCertificates.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -33282,6 +33505,7 @@ func (g *GCERegionSslCertificates) List(ctx context.Context, region string, fl *
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.SslCertificate
 	f := func(l *ga.SslCertificateList) error {
 		klog.V(5).Infof("GCERegionSslCertificates.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -33373,6 +33597,7 @@ func (g *GCERegionSslCertificates) Delete(ctx context.Context, key *meta.Key) er
 		return err
 	}
 	call := g.s.GA.RegionSslCertificates.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -33963,6 +34188,7 @@ func (g *GCEAlphaSubnetworks) List(ctx context.Context, region string, fl *filte
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*alpha.Subnetwork
 	f := func(l *alpha.SubnetworkList) error {
 		klog.V(5).Infof("GCEAlphaSubnetworks.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -34054,6 +34280,7 @@ func (g *GCEAlphaSubnetworks) Delete(ctx context.Context, key *meta.Key) error {
 		return err
 	}
 	call := g.s.Alpha.Subnetworks.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -34460,6 +34687,7 @@ func (g *GCEBetaSubnetworks) List(ctx context.Context, region string, fl *filter
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*beta.Subnetwork
 	f := func(l *beta.SubnetworkList) error {
 		klog.V(5).Infof("GCEBetaSubnetworks.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -34551,6 +34779,7 @@ func (g *GCEBetaSubnetworks) Delete(ctx context.Context, key *meta.Key) error {
 		return err
 	}
 	call := g.s.Beta.Subnetworks.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -34957,6 +35186,7 @@ func (g *GCESubnetworks) List(ctx context.Context, region string, fl *filter.F) 
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.Subnetwork
 	f := func(l *ga.SubnetworkList) error {
 		klog.V(5).Infof("GCESubnetworks.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -35048,6 +35278,7 @@ func (g *GCESubnetworks) Delete(ctx context.Context, key *meta.Key) error {
 		return err
 	}
 	call := g.s.GA.Subnetworks.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -35412,6 +35643,7 @@ func (g *GCEAlphaTargetHttpProxies) List(ctx context.Context, fl *filter.F) ([]*
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*alpha.TargetHttpProxy
 	f := func(l *alpha.TargetHttpProxyList) error {
 		klog.V(5).Infof("GCEAlphaTargetHttpProxies.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -35821,6 +36053,7 @@ func (g *GCEBetaTargetHttpProxies) List(ctx context.Context, fl *filter.F) ([]*b
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*beta.TargetHttpProxy
 	f := func(l *beta.TargetHttpProxyList) error {
 		klog.V(5).Infof("GCEBetaTargetHttpProxies.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -36230,6 +36463,7 @@ func (g *GCETargetHttpProxies) List(ctx context.Context, fl *filter.F) ([]*ga.Ta
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.TargetHttpProxy
 	f := func(l *ga.TargetHttpProxyList) error {
 		klog.V(5).Infof("GCETargetHttpProxies.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -36642,6 +36876,7 @@ func (g *GCEAlphaRegionTargetHttpProxies) List(ctx context.Context, region strin
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*alpha.TargetHttpProxy
 	f := func(l *alpha.TargetHttpProxyList) error {
 		klog.V(5).Infof("GCEAlphaRegionTargetHttpProxies.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -36733,6 +36968,7 @@ func (g *GCEAlphaRegionTargetHttpProxies) Delete(ctx context.Context, key *meta.
 		return err
 	}
 	call := g.s.Alpha.RegionTargetHttpProxies.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -37053,6 +37289,7 @@ func (g *GCEBetaRegionTargetHttpProxies) List(ctx context.Context, region string
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*beta.TargetHttpProxy
 	f := func(l *beta.TargetHttpProxyList) error {
 		klog.V(5).Infof("GCEBetaRegionTargetHttpProxies.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -37144,6 +37381,7 @@ func (g *GCEBetaRegionTargetHttpProxies) Delete(ctx context.Context, key *meta.K
 		return err
 	}
 	call := g.s.Beta.RegionTargetHttpProxies.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -37464,6 +37702,7 @@ func (g *GCERegionTargetHttpProxies) List(ctx context.Context, region string, fl
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.TargetHttpProxy
 	f := func(l *ga.TargetHttpProxyList) error {
 		klog.V(5).Infof("GCERegionTargetHttpProxies.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -37555,6 +37794,7 @@ func (g *GCERegionTargetHttpProxies) Delete(ctx context.Context, key *meta.Key) 
 		return err
 	}
 	call := g.s.GA.RegionTargetHttpProxies.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -37902,6 +38142,7 @@ func (g *GCETargetHttpsProxies) List(ctx context.Context, fl *filter.F) ([]*ga.T
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.TargetHttpsProxy
 	f := func(l *ga.TargetHttpsProxyList) error {
 		klog.V(5).Infof("GCETargetHttpsProxies.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -38467,6 +38708,7 @@ func (g *GCEAlphaTargetHttpsProxies) List(ctx context.Context, fl *filter.F) ([]
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*alpha.TargetHttpsProxy
 	f := func(l *alpha.TargetHttpsProxyList) error {
 		klog.V(5).Infof("GCEAlphaTargetHttpsProxies.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -39032,6 +39274,7 @@ func (g *GCEBetaTargetHttpsProxies) List(ctx context.Context, fl *filter.F) ([]*
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*beta.TargetHttpsProxy
 	f := func(l *beta.TargetHttpsProxyList) error {
 		klog.V(5).Infof("GCEBetaTargetHttpsProxies.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -39580,6 +39823,7 @@ func (g *GCEAlphaRegionTargetHttpsProxies) List(ctx context.Context, region stri
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*alpha.TargetHttpsProxy
 	f := func(l *alpha.TargetHttpsProxyList) error {
 		klog.V(5).Infof("GCEAlphaRegionTargetHttpsProxies.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -39671,6 +39915,7 @@ func (g *GCEAlphaRegionTargetHttpsProxies) Delete(ctx context.Context, key *meta
 		return err
 	}
 	call := g.s.Alpha.RegionTargetHttpsProxies.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -40043,6 +40288,7 @@ func (g *GCEBetaRegionTargetHttpsProxies) List(ctx context.Context, region strin
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*beta.TargetHttpsProxy
 	f := func(l *beta.TargetHttpsProxyList) error {
 		klog.V(5).Infof("GCEBetaRegionTargetHttpsProxies.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -40134,6 +40380,7 @@ func (g *GCEBetaRegionTargetHttpsProxies) Delete(ctx context.Context, key *meta.
 		return err
 	}
 	call := g.s.Beta.RegionTargetHttpsProxies.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -40506,6 +40753,7 @@ func (g *GCERegionTargetHttpsProxies) List(ctx context.Context, region string, f
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.TargetHttpsProxy
 	f := func(l *ga.TargetHttpsProxyList) error {
 		klog.V(5).Infof("GCERegionTargetHttpsProxies.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -40597,6 +40845,7 @@ func (g *GCERegionTargetHttpsProxies) Delete(ctx context.Context, key *meta.Key)
 		return err
 	}
 	call := g.s.GA.RegionTargetHttpsProxies.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -40969,6 +41218,7 @@ func (g *GCETargetPools) List(ctx context.Context, region string, fl *filter.F) 
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.TargetPool
 	f := func(l *ga.TargetPoolList) error {
 		klog.V(5).Infof("GCETargetPools.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -41060,6 +41310,7 @@ func (g *GCETargetPools) Delete(ctx context.Context, key *meta.Key) error {
 		return err
 	}
 	call := g.s.GA.TargetPools.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -41419,6 +41670,7 @@ func (g *GCEAlphaTargetTcpProxies) List(ctx context.Context, fl *filter.F) ([]*a
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*alpha.TargetTcpProxy
 	f := func(l *alpha.TargetTcpProxyList) error {
 		klog.V(5).Infof("GCEAlphaTargetTcpProxies.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -41828,6 +42080,7 @@ func (g *GCEBetaTargetTcpProxies) List(ctx context.Context, fl *filter.F) ([]*be
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*beta.TargetTcpProxy
 	f := func(l *beta.TargetTcpProxyList) error {
 		klog.V(5).Infof("GCEBetaTargetTcpProxies.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -42237,6 +42490,7 @@ func (g *GCETargetTcpProxies) List(ctx context.Context, fl *filter.F) ([]*ga.Tar
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.TargetTcpProxy
 	f := func(l *ga.TargetTcpProxyList) error {
 		klog.V(5).Infof("GCETargetTcpProxies.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -42646,6 +42900,7 @@ func (g *GCEAlphaUrlMaps) List(ctx context.Context, fl *filter.F) ([]*alpha.UrlM
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*alpha.UrlMap
 	f := func(l *alpha.UrlMapList) error {
 		klog.V(5).Infof("GCEAlphaUrlMaps.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -43055,6 +43310,7 @@ func (g *GCEBetaUrlMaps) List(ctx context.Context, fl *filter.F) ([]*beta.UrlMap
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*beta.UrlMap
 	f := func(l *beta.UrlMapList) error {
 		klog.V(5).Infof("GCEBetaUrlMaps.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -43464,6 +43720,7 @@ func (g *GCEUrlMaps) List(ctx context.Context, fl *filter.F) ([]*ga.UrlMap, erro
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.UrlMap
 	f := func(l *ga.UrlMapList) error {
 		klog.V(5).Infof("GCEUrlMaps.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -43876,6 +44133,7 @@ func (g *GCEAlphaRegionUrlMaps) List(ctx context.Context, region string, fl *fil
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*alpha.UrlMap
 	f := func(l *alpha.UrlMapList) error {
 		klog.V(5).Infof("GCEAlphaRegionUrlMaps.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -43967,6 +44225,7 @@ func (g *GCEAlphaRegionUrlMaps) Delete(ctx context.Context, key *meta.Key) error
 		return err
 	}
 	call := g.s.Alpha.RegionUrlMaps.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -44287,6 +44546,7 @@ func (g *GCEBetaRegionUrlMaps) List(ctx context.Context, region string, fl *filt
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*beta.UrlMap
 	f := func(l *beta.UrlMapList) error {
 		klog.V(5).Infof("GCEBetaRegionUrlMaps.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -44378,6 +44638,7 @@ func (g *GCEBetaRegionUrlMaps) Delete(ctx context.Context, key *meta.Key) error 
 		return err
 	}
 	call := g.s.Beta.RegionUrlMaps.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -44698,6 +44959,7 @@ func (g *GCERegionUrlMaps) List(ctx context.Context, region string, fl *filter.F
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.UrlMap
 	f := func(l *ga.UrlMapList) error {
 		klog.V(5).Infof("GCERegionUrlMaps.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -44789,6 +45051,7 @@ func (g *GCERegionUrlMaps) Delete(ctx context.Context, key *meta.Key) error {
 		return err
 	}
 	call := g.s.GA.RegionUrlMaps.Delete(projectID, key.Region, key.Name)
+
 	call.Context(ctx)
 
 	op, err := call.Do()
@@ -45018,6 +45281,7 @@ func (g *GCEZones) List(ctx context.Context, fl *filter.F) ([]*ga.Zone, error) {
 	if fl != filter.None {
 		call.Filter(fl.String())
 	}
+
 	var all []*ga.Zone
 	f := func(l *ga.ZoneList) error {
 		klog.V(5).Infof("GCEZones.List(%v, ..., %v): page %+v", ctx, fl, l)
@@ -45046,6 +45310,1650 @@ func (g *GCEZones) List(ctx context.Context, fl *filter.F) ([]*ga.Zone, error) {
 	}
 
 	return all, nil
+}
+
+// TcpRoutes is an interface that allows for mocking of TcpRoutes.
+type TcpRoutes interface {
+	Get(ctx context.Context, key *meta.Key) (*networkservicesga.TcpRoute, error)
+	List(ctx context.Context, fl *filter.F) ([]*networkservicesga.TcpRoute, error)
+	Insert(ctx context.Context, key *meta.Key, obj *networkservicesga.TcpRoute) error
+	Delete(ctx context.Context, key *meta.Key) error
+	Patch(context.Context, *meta.Key, *networkservicesga.TcpRoute) error
+}
+
+// NewMockTcpRoutes returns a new mock for TcpRoutes.
+func NewMockTcpRoutes(pr ProjectRouter, objs map[meta.Key]*MockTcpRoutesObj) *MockTcpRoutes {
+	mock := &MockTcpRoutes{
+		ProjectRouter: pr,
+
+		Objects:     objs,
+		GetError:    map[meta.Key]error{},
+		InsertError: map[meta.Key]error{},
+		DeleteError: map[meta.Key]error{},
+	}
+	return mock
+}
+
+// MockTcpRoutes is the mock for TcpRoutes.
+type MockTcpRoutes struct {
+	Lock sync.Mutex
+
+	ProjectRouter ProjectRouter
+
+	// Objects maintained by the mock.
+	Objects map[meta.Key]*MockTcpRoutesObj
+
+	// If an entry exists for the given key and operation, then the error
+	// will be returned instead of the operation.
+	GetError    map[meta.Key]error
+	ListError   *error
+	InsertError map[meta.Key]error
+	DeleteError map[meta.Key]error
+
+	// xxxHook allow you to intercept the standard processing of the mock in
+	// order to add your own logic. Return (true, _, _) to prevent the normal
+	// execution flow of the mock. Return (false, nil, nil) to continue with
+	// normal mock behavior/ after the hook function executes.
+	GetHook    func(ctx context.Context, key *meta.Key, m *MockTcpRoutes) (bool, *networkservicesga.TcpRoute, error)
+	ListHook   func(ctx context.Context, fl *filter.F, m *MockTcpRoutes) (bool, []*networkservicesga.TcpRoute, error)
+	InsertHook func(ctx context.Context, key *meta.Key, obj *networkservicesga.TcpRoute, m *MockTcpRoutes) (bool, error)
+	DeleteHook func(ctx context.Context, key *meta.Key, m *MockTcpRoutes) (bool, error)
+	PatchHook  func(context.Context, *meta.Key, *networkservicesga.TcpRoute, *MockTcpRoutes) error
+
+	// X is extra state that can be used as part of the mock. Generated code
+	// will not use this field.
+	X interface{}
+}
+
+// Get returns the object from the mock.
+func (m *MockTcpRoutes) Get(ctx context.Context, key *meta.Key) (*networkservicesga.TcpRoute, error) {
+	if m.GetHook != nil {
+		if intercept, obj, err := m.GetHook(ctx, key, m); intercept {
+			klog.V(5).Infof("MockTcpRoutes.Get(%v, %s) = %+v, %v", ctx, key, obj, err)
+			return obj, err
+		}
+	}
+	if !key.Valid() {
+		return nil, fmt.Errorf("invalid GCE key (%+v)", key)
+	}
+
+	m.Lock.Lock()
+	defer m.Lock.Unlock()
+
+	if err, ok := m.GetError[*key]; ok {
+		klog.V(5).Infof("MockTcpRoutes.Get(%v, %s) = nil, %v", ctx, key, err)
+		return nil, err
+	}
+	if obj, ok := m.Objects[*key]; ok {
+		typedObj := obj.ToGA()
+		klog.V(5).Infof("MockTcpRoutes.Get(%v, %s) = %+v, nil", ctx, key, typedObj)
+		return typedObj, nil
+	}
+
+	err := &googleapi.Error{
+		Code:    http.StatusNotFound,
+		Message: fmt.Sprintf("MockTcpRoutes %v not found", key),
+	}
+	klog.V(5).Infof("MockTcpRoutes.Get(%v, %s) = nil, %v", ctx, key, err)
+	return nil, err
+}
+
+// List all of the objects in the mock.
+func (m *MockTcpRoutes) List(ctx context.Context, fl *filter.F) ([]*networkservicesga.TcpRoute, error) {
+	if m.ListHook != nil {
+		if intercept, objs, err := m.ListHook(ctx, fl, m); intercept {
+			klog.V(5).Infof("MockTcpRoutes.List(%v, %v) = [%v items], %v", ctx, fl, len(objs), err)
+			return objs, err
+		}
+	}
+
+	m.Lock.Lock()
+	defer m.Lock.Unlock()
+
+	if m.ListError != nil {
+		err := *m.ListError
+		klog.V(5).Infof("MockTcpRoutes.List(%v, %v) = nil, %v", ctx, fl, err)
+
+		return nil, *m.ListError
+	}
+
+	var objs []*networkservicesga.TcpRoute
+	for _, obj := range m.Objects {
+		if !fl.Match(obj.ToGA()) {
+			continue
+		}
+		objs = append(objs, obj.ToGA())
+	}
+
+	klog.V(5).Infof("MockTcpRoutes.List(%v, %v) = [%v items], nil", ctx, fl, len(objs))
+	return objs, nil
+}
+
+// Insert is a mock for inserting/creating a new object.
+func (m *MockTcpRoutes) Insert(ctx context.Context, key *meta.Key, obj *networkservicesga.TcpRoute) error {
+	if m.InsertHook != nil {
+		if intercept, err := m.InsertHook(ctx, key, obj, m); intercept {
+			klog.V(5).Infof("MockTcpRoutes.Insert(%v, %v, %+v) = %v", ctx, key, obj, err)
+			return err
+		}
+	}
+	if !key.Valid() {
+		return fmt.Errorf("invalid GCE key (%+v)", key)
+	}
+
+	m.Lock.Lock()
+	defer m.Lock.Unlock()
+
+	if err, ok := m.InsertError[*key]; ok {
+		klog.V(5).Infof("MockTcpRoutes.Insert(%v, %v, %+v) = %v", ctx, key, obj, err)
+		return err
+	}
+	if _, ok := m.Objects[*key]; ok {
+		err := &googleapi.Error{
+			Code:    http.StatusConflict,
+			Message: fmt.Sprintf("MockTcpRoutes %v exists", key),
+		}
+		klog.V(5).Infof("MockTcpRoutes.Insert(%v, %v, %+v) = %v", ctx, key, obj, err)
+		return err
+	}
+
+	obj.Name = key.Name
+	projectID := m.ProjectRouter.ProjectID(ctx, "ga", "tcpRoutes")
+	obj.SelfLink = SelfLink(meta.VersionGA, projectID, "tcpRoutes", key)
+
+	m.Objects[*key] = &MockTcpRoutesObj{obj}
+	klog.V(5).Infof("MockTcpRoutes.Insert(%v, %v, %+v) = nil", ctx, key, obj)
+	return nil
+}
+
+// Delete is a mock for deleting the object.
+func (m *MockTcpRoutes) Delete(ctx context.Context, key *meta.Key) error {
+	if m.DeleteHook != nil {
+		if intercept, err := m.DeleteHook(ctx, key, m); intercept {
+			klog.V(5).Infof("MockTcpRoutes.Delete(%v, %v) = %v", ctx, key, err)
+			return err
+		}
+	}
+	if !key.Valid() {
+		return fmt.Errorf("invalid GCE key (%+v)", key)
+	}
+
+	m.Lock.Lock()
+	defer m.Lock.Unlock()
+
+	if err, ok := m.DeleteError[*key]; ok {
+		klog.V(5).Infof("MockTcpRoutes.Delete(%v, %v) = %v", ctx, key, err)
+		return err
+	}
+	if _, ok := m.Objects[*key]; !ok {
+		err := &googleapi.Error{
+			Code:    http.StatusNotFound,
+			Message: fmt.Sprintf("MockTcpRoutes %v not found", key),
+		}
+		klog.V(5).Infof("MockTcpRoutes.Delete(%v, %v) = %v", ctx, key, err)
+		return err
+	}
+
+	delete(m.Objects, *key)
+	klog.V(5).Infof("MockTcpRoutes.Delete(%v, %v) = nil", ctx, key)
+	return nil
+}
+
+// Obj wraps the object for use in the mock.
+func (m *MockTcpRoutes) Obj(o *networkservicesga.TcpRoute) *MockTcpRoutesObj {
+	return &MockTcpRoutesObj{o}
+}
+
+// Patch is a mock for the corresponding method.
+func (m *MockTcpRoutes) Patch(ctx context.Context, key *meta.Key, arg0 *networkservicesga.TcpRoute) error {
+	if m.PatchHook != nil {
+		return m.PatchHook(ctx, key, arg0, m)
+	}
+	return nil
+}
+
+// GCETcpRoutes is a simplifying adapter for the GCE TcpRoutes.
+type GCETcpRoutes struct {
+	s *Service
+}
+
+// Get the TcpRoute named by key.
+func (g *GCETcpRoutes) Get(ctx context.Context, key *meta.Key) (*networkservicesga.TcpRoute, error) {
+	klog.V(5).Infof("GCETcpRoutes.Get(%v, %v): called", ctx, key)
+
+	if !key.Valid() {
+		klog.V(2).Infof("GCETcpRoutes.Get(%v, %v): key is invalid (%#v)", ctx, key, key)
+		return nil, fmt.Errorf("invalid GCE key (%#v)", key)
+	}
+	projectID := g.s.ProjectRouter.ProjectID(ctx, "ga", "TcpRoutes")
+	ck := &CallContextKey{
+		ProjectID: projectID,
+		Operation: "Get",
+		Version:   meta.Version("ga"),
+		Service:   "TcpRoutes",
+	}
+
+	klog.V(5).Infof("GCETcpRoutes.Get(%v, %v): projectID = %v, ck = %+v", ctx, key, projectID, ck)
+	callObserverStart(ctx, ck)
+	if err := g.s.RateLimiter.Accept(ctx, ck); err != nil {
+		klog.V(4).Infof("GCETcpRoutes.Get(%v, %v): RateLimiter error: %v", ctx, key, err)
+		return nil, err
+	}
+	name := fmt.Sprintf("projects/%s/locations/global/TcpRoutes/%s", projectID, key.Name)
+	call := g.s.NetworkServicesGA.TcpRoutes.Get(name)
+	call.Context(ctx)
+	v, err := call.Do()
+	klog.V(4).Infof("GCETcpRoutes.Get(%v, %v) = %+v, %v", ctx, key, v, err)
+
+	callObserverEnd(ctx, ck, err)
+	g.s.RateLimiter.Observe(ctx, err, ck)
+
+	return v, err
+}
+
+// List all TcpRoute objects.
+func (g *GCETcpRoutes) List(ctx context.Context, fl *filter.F) ([]*networkservicesga.TcpRoute, error) {
+	klog.V(5).Infof("GCETcpRoutes.List(%v, %v) called", ctx, fl)
+	projectID := g.s.ProjectRouter.ProjectID(ctx, "ga", "TcpRoutes")
+	ck := &CallContextKey{
+		ProjectID: projectID,
+		Operation: "List",
+		Version:   meta.Version("ga"),
+		Service:   "TcpRoutes",
+	}
+
+	callObserverStart(ctx, ck)
+	if err := g.s.RateLimiter.Accept(ctx, ck); err != nil {
+		return nil, err
+	}
+	klog.V(5).Infof("GCETcpRoutes.List(%v, %v): projectID = %v, ck = %+v", ctx, fl, projectID, ck)
+	call := g.s.NetworkServicesGA.TcpRoutes.List(projectID)
+
+	var all []*networkservicesga.TcpRoute
+	f := func(l *networkservicesga.ListTcpRoutesResponse) error {
+		klog.V(5).Infof("GCETcpRoutes.List(%v, ..., %v): page %+v", ctx, fl, l)
+		all = append(all, l.TcpRoutes...)
+		return nil
+	}
+	if err := call.Pages(ctx, f); err != nil {
+		callObserverEnd(ctx, ck, err)
+		g.s.RateLimiter.Observe(ctx, err, ck)
+
+		klog.V(4).Infof("GCETcpRoutes.List(%v, ..., %v) = %v, %v", ctx, fl, nil, err)
+		return nil, err
+	}
+
+	callObserverEnd(ctx, ck, nil)
+	g.s.RateLimiter.Observe(ctx, nil, ck)
+
+	if kLogEnabled(4) {
+		klog.V(4).Infof("GCETcpRoutes.List(%v, ..., %v) = [%v items], %v", ctx, fl, len(all), nil)
+	} else if kLogEnabled(5) {
+		var asStr []string
+		for _, o := range all {
+			asStr = append(asStr, fmt.Sprintf("%+v", o))
+		}
+		klog.V(5).Infof("GCETcpRoutes.List(%v, ..., %v) = %v, %v", ctx, fl, asStr, nil)
+	}
+
+	return all, nil
+}
+
+// Insert TcpRoute with key of value obj.
+func (g *GCETcpRoutes) Insert(ctx context.Context, key *meta.Key, obj *networkservicesga.TcpRoute) error {
+	klog.V(5).Infof("GCETcpRoutes.Insert(%v, %v, %+v): called", ctx, key, obj)
+	if !key.Valid() {
+		klog.V(2).Infof("GCETcpRoutes.Insert(%v, %v, ...): key is invalid (%#v)", ctx, key, key)
+		return fmt.Errorf("invalid GCE key (%+v)", key)
+	}
+	projectID := g.s.ProjectRouter.ProjectID(ctx, "ga", "TcpRoutes")
+	ck := &CallContextKey{
+		ProjectID: projectID,
+		Operation: "Insert",
+		Version:   meta.Version("ga"),
+		Service:   "TcpRoutes",
+	}
+
+	klog.V(5).Infof("GCETcpRoutes.Insert(%v, %v, ...): projectID = %v, ck = %+v", ctx, key, projectID, ck)
+	callObserverStart(ctx, ck)
+	if err := g.s.RateLimiter.Accept(ctx, ck); err != nil {
+		klog.V(4).Infof("GCETcpRoutes.Insert(%v, %v, ...): RateLimiter error: %v", ctx, key, err)
+		return err
+	}
+	obj.Name = key.Name
+	parent := fmt.Sprintf("projects/%s/locations/global", projectID)
+	call := g.s.NetworkServicesGA.TcpRoutes.Create(parent, obj)
+	call.Context(ctx)
+
+	op, err := call.Do()
+
+	callObserverEnd(ctx, ck, err)
+	g.s.RateLimiter.Observe(ctx, err, ck)
+
+	if err != nil {
+		klog.V(4).Infof("GCETcpRoutes.Insert(%v, %v, ...) = %+v", ctx, key, err)
+		return err
+	}
+
+	err = g.s.WaitForCompletion(ctx, op)
+	klog.V(4).Infof("GCETcpRoutes.Insert(%v, %v, %+v) = %+v", ctx, key, obj, err)
+	return err
+}
+
+// Delete the TcpRoute referenced by key.
+func (g *GCETcpRoutes) Delete(ctx context.Context, key *meta.Key) error {
+	klog.V(5).Infof("GCETcpRoutes.Delete(%v, %v): called", ctx, key)
+	if !key.Valid() {
+		klog.V(2).Infof("GCETcpRoutes.Delete(%v, %v): key is invalid (%#v)", ctx, key, key)
+		return fmt.Errorf("invalid GCE key (%+v)", key)
+	}
+	projectID := g.s.ProjectRouter.ProjectID(ctx, "ga", "TcpRoutes")
+	ck := &CallContextKey{
+		ProjectID: projectID,
+		Operation: "Delete",
+		Version:   meta.Version("ga"),
+		Service:   "TcpRoutes",
+	}
+	klog.V(5).Infof("GCETcpRoutes.Delete(%v, %v): projectID = %v, ck = %+v", ctx, key, projectID, ck)
+	callObserverStart(ctx, ck)
+	if err := g.s.RateLimiter.Accept(ctx, ck); err != nil {
+		klog.V(4).Infof("GCETcpRoutes.Delete(%v, %v): RateLimiter error: %v", ctx, key, err)
+		return err
+	}
+	name := fmt.Sprintf("projects/%s/locations/global/TcpRoutes/%s", projectID, key.Name)
+	call := g.s.NetworkServicesGA.TcpRoutes.Delete(name)
+
+	call.Context(ctx)
+
+	op, err := call.Do()
+
+	callObserverEnd(ctx, ck, err)
+	g.s.RateLimiter.Observe(ctx, err, ck)
+
+	if err != nil {
+		klog.V(4).Infof("GCETcpRoutes.Delete(%v, %v) = %v", ctx, key, err)
+		return err
+	}
+
+	err = g.s.WaitForCompletion(ctx, op)
+	klog.V(4).Infof("GCETcpRoutes.Delete(%v, %v) = %v", ctx, key, err)
+	return err
+}
+
+// Patch is a method on GCETcpRoutes.
+func (g *GCETcpRoutes) Patch(ctx context.Context, key *meta.Key, arg0 *networkservicesga.TcpRoute) error {
+	klog.V(5).Infof("GCETcpRoutes.Patch(%v, %v, ...): called", ctx, key)
+
+	if !key.Valid() {
+		klog.V(2).Infof("GCETcpRoutes.Patch(%v, %v, ...): key is invalid (%#v)", ctx, key, key)
+		return fmt.Errorf("invalid GCE key (%+v)", key)
+	}
+	projectID := g.s.ProjectRouter.ProjectID(ctx, "ga", "TcpRoutes")
+	ck := &CallContextKey{
+		ProjectID: projectID,
+		Operation: "Patch",
+		Version:   meta.Version("ga"),
+		Service:   "TcpRoutes",
+	}
+	klog.V(5).Infof("GCETcpRoutes.Patch(%v, %v, ...): projectID = %v, ck = %+v", ctx, key, projectID, ck)
+	callObserverStart(ctx, ck)
+	if err := g.s.RateLimiter.Accept(ctx, ck); err != nil {
+		klog.V(4).Infof("GCETcpRoutes.Patch(%v, %v, ...): RateLimiter error: %v", ctx, key, err)
+		return err
+	}
+	name := fmt.Sprintf("projects/%s/locations/global/TcpRoutes/%s", projectID, key.Name)
+	call := g.s.NetworkServicesGA.TcpRoutes.Patch(name, arg0)
+	call.Context(ctx)
+	op, err := call.Do()
+
+	if err != nil {
+		callObserverEnd(ctx, ck, err)
+		g.s.RateLimiter.Observe(ctx, err, ck)
+
+		klog.V(4).Infof("GCETcpRoutes.Patch(%v, %v, ...) = %+v", ctx, key, err)
+		return err
+	}
+
+	err = g.s.WaitForCompletion(ctx, op)
+
+	callObserverEnd(ctx, ck, err)
+	g.s.RateLimiter.Observe(ctx, err, ck) // XXX
+
+	klog.V(4).Infof("GCETcpRoutes.Patch(%v, %v, ...) = %+v", ctx, key, err)
+	return err
+}
+
+// BetaTcpRoutes is an interface that allows for mocking of TcpRoutes.
+type BetaTcpRoutes interface {
+	Get(ctx context.Context, key *meta.Key) (*networkservicesbeta.TcpRoute, error)
+	List(ctx context.Context, fl *filter.F) ([]*networkservicesbeta.TcpRoute, error)
+	Insert(ctx context.Context, key *meta.Key, obj *networkservicesbeta.TcpRoute) error
+	Delete(ctx context.Context, key *meta.Key) error
+	Patch(context.Context, *meta.Key, *networkservicesbeta.TcpRoute) error
+}
+
+// NewMockBetaTcpRoutes returns a new mock for TcpRoutes.
+func NewMockBetaTcpRoutes(pr ProjectRouter, objs map[meta.Key]*MockTcpRoutesObj) *MockBetaTcpRoutes {
+	mock := &MockBetaTcpRoutes{
+		ProjectRouter: pr,
+
+		Objects:     objs,
+		GetError:    map[meta.Key]error{},
+		InsertError: map[meta.Key]error{},
+		DeleteError: map[meta.Key]error{},
+	}
+	return mock
+}
+
+// MockBetaTcpRoutes is the mock for TcpRoutes.
+type MockBetaTcpRoutes struct {
+	Lock sync.Mutex
+
+	ProjectRouter ProjectRouter
+
+	// Objects maintained by the mock.
+	Objects map[meta.Key]*MockTcpRoutesObj
+
+	// If an entry exists for the given key and operation, then the error
+	// will be returned instead of the operation.
+	GetError    map[meta.Key]error
+	ListError   *error
+	InsertError map[meta.Key]error
+	DeleteError map[meta.Key]error
+
+	// xxxHook allow you to intercept the standard processing of the mock in
+	// order to add your own logic. Return (true, _, _) to prevent the normal
+	// execution flow of the mock. Return (false, nil, nil) to continue with
+	// normal mock behavior/ after the hook function executes.
+	GetHook    func(ctx context.Context, key *meta.Key, m *MockBetaTcpRoutes) (bool, *networkservicesbeta.TcpRoute, error)
+	ListHook   func(ctx context.Context, fl *filter.F, m *MockBetaTcpRoutes) (bool, []*networkservicesbeta.TcpRoute, error)
+	InsertHook func(ctx context.Context, key *meta.Key, obj *networkservicesbeta.TcpRoute, m *MockBetaTcpRoutes) (bool, error)
+	DeleteHook func(ctx context.Context, key *meta.Key, m *MockBetaTcpRoutes) (bool, error)
+	PatchHook  func(context.Context, *meta.Key, *networkservicesbeta.TcpRoute, *MockBetaTcpRoutes) error
+
+	// X is extra state that can be used as part of the mock. Generated code
+	// will not use this field.
+	X interface{}
+}
+
+// Get returns the object from the mock.
+func (m *MockBetaTcpRoutes) Get(ctx context.Context, key *meta.Key) (*networkservicesbeta.TcpRoute, error) {
+	if m.GetHook != nil {
+		if intercept, obj, err := m.GetHook(ctx, key, m); intercept {
+			klog.V(5).Infof("MockBetaTcpRoutes.Get(%v, %s) = %+v, %v", ctx, key, obj, err)
+			return obj, err
+		}
+	}
+	if !key.Valid() {
+		return nil, fmt.Errorf("invalid GCE key (%+v)", key)
+	}
+
+	m.Lock.Lock()
+	defer m.Lock.Unlock()
+
+	if err, ok := m.GetError[*key]; ok {
+		klog.V(5).Infof("MockBetaTcpRoutes.Get(%v, %s) = nil, %v", ctx, key, err)
+		return nil, err
+	}
+	if obj, ok := m.Objects[*key]; ok {
+		typedObj := obj.ToBeta()
+		klog.V(5).Infof("MockBetaTcpRoutes.Get(%v, %s) = %+v, nil", ctx, key, typedObj)
+		return typedObj, nil
+	}
+
+	err := &googleapi.Error{
+		Code:    http.StatusNotFound,
+		Message: fmt.Sprintf("MockBetaTcpRoutes %v not found", key),
+	}
+	klog.V(5).Infof("MockBetaTcpRoutes.Get(%v, %s) = nil, %v", ctx, key, err)
+	return nil, err
+}
+
+// List all of the objects in the mock.
+func (m *MockBetaTcpRoutes) List(ctx context.Context, fl *filter.F) ([]*networkservicesbeta.TcpRoute, error) {
+	if m.ListHook != nil {
+		if intercept, objs, err := m.ListHook(ctx, fl, m); intercept {
+			klog.V(5).Infof("MockBetaTcpRoutes.List(%v, %v) = [%v items], %v", ctx, fl, len(objs), err)
+			return objs, err
+		}
+	}
+
+	m.Lock.Lock()
+	defer m.Lock.Unlock()
+
+	if m.ListError != nil {
+		err := *m.ListError
+		klog.V(5).Infof("MockBetaTcpRoutes.List(%v, %v) = nil, %v", ctx, fl, err)
+
+		return nil, *m.ListError
+	}
+
+	var objs []*networkservicesbeta.TcpRoute
+	for _, obj := range m.Objects {
+		if !fl.Match(obj.ToBeta()) {
+			continue
+		}
+		objs = append(objs, obj.ToBeta())
+	}
+
+	klog.V(5).Infof("MockBetaTcpRoutes.List(%v, %v) = [%v items], nil", ctx, fl, len(objs))
+	return objs, nil
+}
+
+// Insert is a mock for inserting/creating a new object.
+func (m *MockBetaTcpRoutes) Insert(ctx context.Context, key *meta.Key, obj *networkservicesbeta.TcpRoute) error {
+	if m.InsertHook != nil {
+		if intercept, err := m.InsertHook(ctx, key, obj, m); intercept {
+			klog.V(5).Infof("MockBetaTcpRoutes.Insert(%v, %v, %+v) = %v", ctx, key, obj, err)
+			return err
+		}
+	}
+	if !key.Valid() {
+		return fmt.Errorf("invalid GCE key (%+v)", key)
+	}
+
+	m.Lock.Lock()
+	defer m.Lock.Unlock()
+
+	if err, ok := m.InsertError[*key]; ok {
+		klog.V(5).Infof("MockBetaTcpRoutes.Insert(%v, %v, %+v) = %v", ctx, key, obj, err)
+		return err
+	}
+	if _, ok := m.Objects[*key]; ok {
+		err := &googleapi.Error{
+			Code:    http.StatusConflict,
+			Message: fmt.Sprintf("MockBetaTcpRoutes %v exists", key),
+		}
+		klog.V(5).Infof("MockBetaTcpRoutes.Insert(%v, %v, %+v) = %v", ctx, key, obj, err)
+		return err
+	}
+
+	obj.Name = key.Name
+	projectID := m.ProjectRouter.ProjectID(ctx, "beta", "tcpRoutes")
+	obj.SelfLink = SelfLink(meta.VersionBeta, projectID, "tcpRoutes", key)
+
+	m.Objects[*key] = &MockTcpRoutesObj{obj}
+	klog.V(5).Infof("MockBetaTcpRoutes.Insert(%v, %v, %+v) = nil", ctx, key, obj)
+	return nil
+}
+
+// Delete is a mock for deleting the object.
+func (m *MockBetaTcpRoutes) Delete(ctx context.Context, key *meta.Key) error {
+	if m.DeleteHook != nil {
+		if intercept, err := m.DeleteHook(ctx, key, m); intercept {
+			klog.V(5).Infof("MockBetaTcpRoutes.Delete(%v, %v) = %v", ctx, key, err)
+			return err
+		}
+	}
+	if !key.Valid() {
+		return fmt.Errorf("invalid GCE key (%+v)", key)
+	}
+
+	m.Lock.Lock()
+	defer m.Lock.Unlock()
+
+	if err, ok := m.DeleteError[*key]; ok {
+		klog.V(5).Infof("MockBetaTcpRoutes.Delete(%v, %v) = %v", ctx, key, err)
+		return err
+	}
+	if _, ok := m.Objects[*key]; !ok {
+		err := &googleapi.Error{
+			Code:    http.StatusNotFound,
+			Message: fmt.Sprintf("MockBetaTcpRoutes %v not found", key),
+		}
+		klog.V(5).Infof("MockBetaTcpRoutes.Delete(%v, %v) = %v", ctx, key, err)
+		return err
+	}
+
+	delete(m.Objects, *key)
+	klog.V(5).Infof("MockBetaTcpRoutes.Delete(%v, %v) = nil", ctx, key)
+	return nil
+}
+
+// Obj wraps the object for use in the mock.
+func (m *MockBetaTcpRoutes) Obj(o *networkservicesbeta.TcpRoute) *MockTcpRoutesObj {
+	return &MockTcpRoutesObj{o}
+}
+
+// Patch is a mock for the corresponding method.
+func (m *MockBetaTcpRoutes) Patch(ctx context.Context, key *meta.Key, arg0 *networkservicesbeta.TcpRoute) error {
+	if m.PatchHook != nil {
+		return m.PatchHook(ctx, key, arg0, m)
+	}
+	return nil
+}
+
+// GCEBetaTcpRoutes is a simplifying adapter for the GCE TcpRoutes.
+type GCEBetaTcpRoutes struct {
+	s *Service
+}
+
+// Get the TcpRoute named by key.
+func (g *GCEBetaTcpRoutes) Get(ctx context.Context, key *meta.Key) (*networkservicesbeta.TcpRoute, error) {
+	klog.V(5).Infof("GCEBetaTcpRoutes.Get(%v, %v): called", ctx, key)
+
+	if !key.Valid() {
+		klog.V(2).Infof("GCEBetaTcpRoutes.Get(%v, %v): key is invalid (%#v)", ctx, key, key)
+		return nil, fmt.Errorf("invalid GCE key (%#v)", key)
+	}
+	projectID := g.s.ProjectRouter.ProjectID(ctx, "beta", "TcpRoutes")
+	ck := &CallContextKey{
+		ProjectID: projectID,
+		Operation: "Get",
+		Version:   meta.Version("beta"),
+		Service:   "TcpRoutes",
+	}
+
+	klog.V(5).Infof("GCEBetaTcpRoutes.Get(%v, %v): projectID = %v, ck = %+v", ctx, key, projectID, ck)
+	callObserverStart(ctx, ck)
+	if err := g.s.RateLimiter.Accept(ctx, ck); err != nil {
+		klog.V(4).Infof("GCEBetaTcpRoutes.Get(%v, %v): RateLimiter error: %v", ctx, key, err)
+		return nil, err
+	}
+	name := fmt.Sprintf("projects/%s/locations/global/TcpRoutes/%s", projectID, key.Name)
+	call := g.s.NetworkServicesBeta.TcpRoutes.Get(name)
+	call.Context(ctx)
+	v, err := call.Do()
+	klog.V(4).Infof("GCEBetaTcpRoutes.Get(%v, %v) = %+v, %v", ctx, key, v, err)
+
+	callObserverEnd(ctx, ck, err)
+	g.s.RateLimiter.Observe(ctx, err, ck)
+
+	return v, err
+}
+
+// List all TcpRoute objects.
+func (g *GCEBetaTcpRoutes) List(ctx context.Context, fl *filter.F) ([]*networkservicesbeta.TcpRoute, error) {
+	klog.V(5).Infof("GCEBetaTcpRoutes.List(%v, %v) called", ctx, fl)
+	projectID := g.s.ProjectRouter.ProjectID(ctx, "beta", "TcpRoutes")
+	ck := &CallContextKey{
+		ProjectID: projectID,
+		Operation: "List",
+		Version:   meta.Version("beta"),
+		Service:   "TcpRoutes",
+	}
+
+	callObserverStart(ctx, ck)
+	if err := g.s.RateLimiter.Accept(ctx, ck); err != nil {
+		return nil, err
+	}
+	klog.V(5).Infof("GCEBetaTcpRoutes.List(%v, %v): projectID = %v, ck = %+v", ctx, fl, projectID, ck)
+	call := g.s.NetworkServicesBeta.TcpRoutes.List(projectID)
+
+	var all []*networkservicesbeta.TcpRoute
+	f := func(l *networkservicesbeta.ListTcpRoutesResponse) error {
+		klog.V(5).Infof("GCEBetaTcpRoutes.List(%v, ..., %v): page %+v", ctx, fl, l)
+		all = append(all, l.TcpRoutes...)
+		return nil
+	}
+	if err := call.Pages(ctx, f); err != nil {
+		callObserverEnd(ctx, ck, err)
+		g.s.RateLimiter.Observe(ctx, err, ck)
+
+		klog.V(4).Infof("GCEBetaTcpRoutes.List(%v, ..., %v) = %v, %v", ctx, fl, nil, err)
+		return nil, err
+	}
+
+	callObserverEnd(ctx, ck, nil)
+	g.s.RateLimiter.Observe(ctx, nil, ck)
+
+	if kLogEnabled(4) {
+		klog.V(4).Infof("GCEBetaTcpRoutes.List(%v, ..., %v) = [%v items], %v", ctx, fl, len(all), nil)
+	} else if kLogEnabled(5) {
+		var asStr []string
+		for _, o := range all {
+			asStr = append(asStr, fmt.Sprintf("%+v", o))
+		}
+		klog.V(5).Infof("GCEBetaTcpRoutes.List(%v, ..., %v) = %v, %v", ctx, fl, asStr, nil)
+	}
+
+	return all, nil
+}
+
+// Insert TcpRoute with key of value obj.
+func (g *GCEBetaTcpRoutes) Insert(ctx context.Context, key *meta.Key, obj *networkservicesbeta.TcpRoute) error {
+	klog.V(5).Infof("GCEBetaTcpRoutes.Insert(%v, %v, %+v): called", ctx, key, obj)
+	if !key.Valid() {
+		klog.V(2).Infof("GCEBetaTcpRoutes.Insert(%v, %v, ...): key is invalid (%#v)", ctx, key, key)
+		return fmt.Errorf("invalid GCE key (%+v)", key)
+	}
+	projectID := g.s.ProjectRouter.ProjectID(ctx, "beta", "TcpRoutes")
+	ck := &CallContextKey{
+		ProjectID: projectID,
+		Operation: "Insert",
+		Version:   meta.Version("beta"),
+		Service:   "TcpRoutes",
+	}
+
+	klog.V(5).Infof("GCEBetaTcpRoutes.Insert(%v, %v, ...): projectID = %v, ck = %+v", ctx, key, projectID, ck)
+	callObserverStart(ctx, ck)
+	if err := g.s.RateLimiter.Accept(ctx, ck); err != nil {
+		klog.V(4).Infof("GCEBetaTcpRoutes.Insert(%v, %v, ...): RateLimiter error: %v", ctx, key, err)
+		return err
+	}
+	obj.Name = key.Name
+	parent := fmt.Sprintf("projects/%s/locations/global", projectID)
+	call := g.s.NetworkServicesBeta.TcpRoutes.Create(parent, obj)
+	call.Context(ctx)
+
+	op, err := call.Do()
+
+	callObserverEnd(ctx, ck, err)
+	g.s.RateLimiter.Observe(ctx, err, ck)
+
+	if err != nil {
+		klog.V(4).Infof("GCEBetaTcpRoutes.Insert(%v, %v, ...) = %+v", ctx, key, err)
+		return err
+	}
+
+	err = g.s.WaitForCompletion(ctx, op)
+	klog.V(4).Infof("GCEBetaTcpRoutes.Insert(%v, %v, %+v) = %+v", ctx, key, obj, err)
+	return err
+}
+
+// Delete the TcpRoute referenced by key.
+func (g *GCEBetaTcpRoutes) Delete(ctx context.Context, key *meta.Key) error {
+	klog.V(5).Infof("GCEBetaTcpRoutes.Delete(%v, %v): called", ctx, key)
+	if !key.Valid() {
+		klog.V(2).Infof("GCEBetaTcpRoutes.Delete(%v, %v): key is invalid (%#v)", ctx, key, key)
+		return fmt.Errorf("invalid GCE key (%+v)", key)
+	}
+	projectID := g.s.ProjectRouter.ProjectID(ctx, "beta", "TcpRoutes")
+	ck := &CallContextKey{
+		ProjectID: projectID,
+		Operation: "Delete",
+		Version:   meta.Version("beta"),
+		Service:   "TcpRoutes",
+	}
+	klog.V(5).Infof("GCEBetaTcpRoutes.Delete(%v, %v): projectID = %v, ck = %+v", ctx, key, projectID, ck)
+	callObserverStart(ctx, ck)
+	if err := g.s.RateLimiter.Accept(ctx, ck); err != nil {
+		klog.V(4).Infof("GCEBetaTcpRoutes.Delete(%v, %v): RateLimiter error: %v", ctx, key, err)
+		return err
+	}
+	name := fmt.Sprintf("projects/%s/locations/global/TcpRoutes/%s", projectID, key.Name)
+	call := g.s.NetworkServicesBeta.TcpRoutes.Delete(name)
+
+	call.Context(ctx)
+
+	op, err := call.Do()
+
+	callObserverEnd(ctx, ck, err)
+	g.s.RateLimiter.Observe(ctx, err, ck)
+
+	if err != nil {
+		klog.V(4).Infof("GCEBetaTcpRoutes.Delete(%v, %v) = %v", ctx, key, err)
+		return err
+	}
+
+	err = g.s.WaitForCompletion(ctx, op)
+	klog.V(4).Infof("GCEBetaTcpRoutes.Delete(%v, %v) = %v", ctx, key, err)
+	return err
+}
+
+// Patch is a method on GCEBetaTcpRoutes.
+func (g *GCEBetaTcpRoutes) Patch(ctx context.Context, key *meta.Key, arg0 *networkservicesbeta.TcpRoute) error {
+	klog.V(5).Infof("GCEBetaTcpRoutes.Patch(%v, %v, ...): called", ctx, key)
+
+	if !key.Valid() {
+		klog.V(2).Infof("GCEBetaTcpRoutes.Patch(%v, %v, ...): key is invalid (%#v)", ctx, key, key)
+		return fmt.Errorf("invalid GCE key (%+v)", key)
+	}
+	projectID := g.s.ProjectRouter.ProjectID(ctx, "beta", "TcpRoutes")
+	ck := &CallContextKey{
+		ProjectID: projectID,
+		Operation: "Patch",
+		Version:   meta.Version("beta"),
+		Service:   "TcpRoutes",
+	}
+	klog.V(5).Infof("GCEBetaTcpRoutes.Patch(%v, %v, ...): projectID = %v, ck = %+v", ctx, key, projectID, ck)
+	callObserverStart(ctx, ck)
+	if err := g.s.RateLimiter.Accept(ctx, ck); err != nil {
+		klog.V(4).Infof("GCEBetaTcpRoutes.Patch(%v, %v, ...): RateLimiter error: %v", ctx, key, err)
+		return err
+	}
+	name := fmt.Sprintf("projects/%s/locations/global/TcpRoutes/%s", projectID, key.Name)
+	call := g.s.NetworkServicesBeta.TcpRoutes.Patch(name, arg0)
+	call.Context(ctx)
+	op, err := call.Do()
+
+	if err != nil {
+		callObserverEnd(ctx, ck, err)
+		g.s.RateLimiter.Observe(ctx, err, ck)
+
+		klog.V(4).Infof("GCEBetaTcpRoutes.Patch(%v, %v, ...) = %+v", ctx, key, err)
+		return err
+	}
+
+	err = g.s.WaitForCompletion(ctx, op)
+
+	callObserverEnd(ctx, ck, err)
+	g.s.RateLimiter.Observe(ctx, err, ck) // XXX
+
+	klog.V(4).Infof("GCEBetaTcpRoutes.Patch(%v, %v, ...) = %+v", ctx, key, err)
+	return err
+}
+
+// Meshes is an interface that allows for mocking of Meshes.
+type Meshes interface {
+	Get(ctx context.Context, key *meta.Key) (*networkservicesga.Mesh, error)
+	List(ctx context.Context, fl *filter.F) ([]*networkservicesga.Mesh, error)
+	Insert(ctx context.Context, key *meta.Key, obj *networkservicesga.Mesh) error
+	Delete(ctx context.Context, key *meta.Key) error
+	Patch(context.Context, *meta.Key, *networkservicesga.Mesh) error
+}
+
+// NewMockMeshes returns a new mock for Meshes.
+func NewMockMeshes(pr ProjectRouter, objs map[meta.Key]*MockMeshesObj) *MockMeshes {
+	mock := &MockMeshes{
+		ProjectRouter: pr,
+
+		Objects:     objs,
+		GetError:    map[meta.Key]error{},
+		InsertError: map[meta.Key]error{},
+		DeleteError: map[meta.Key]error{},
+	}
+	return mock
+}
+
+// MockMeshes is the mock for Meshes.
+type MockMeshes struct {
+	Lock sync.Mutex
+
+	ProjectRouter ProjectRouter
+
+	// Objects maintained by the mock.
+	Objects map[meta.Key]*MockMeshesObj
+
+	// If an entry exists for the given key and operation, then the error
+	// will be returned instead of the operation.
+	GetError    map[meta.Key]error
+	ListError   *error
+	InsertError map[meta.Key]error
+	DeleteError map[meta.Key]error
+
+	// xxxHook allow you to intercept the standard processing of the mock in
+	// order to add your own logic. Return (true, _, _) to prevent the normal
+	// execution flow of the mock. Return (false, nil, nil) to continue with
+	// normal mock behavior/ after the hook function executes.
+	GetHook    func(ctx context.Context, key *meta.Key, m *MockMeshes) (bool, *networkservicesga.Mesh, error)
+	ListHook   func(ctx context.Context, fl *filter.F, m *MockMeshes) (bool, []*networkservicesga.Mesh, error)
+	InsertHook func(ctx context.Context, key *meta.Key, obj *networkservicesga.Mesh, m *MockMeshes) (bool, error)
+	DeleteHook func(ctx context.Context, key *meta.Key, m *MockMeshes) (bool, error)
+	PatchHook  func(context.Context, *meta.Key, *networkservicesga.Mesh, *MockMeshes) error
+
+	// X is extra state that can be used as part of the mock. Generated code
+	// will not use this field.
+	X interface{}
+}
+
+// Get returns the object from the mock.
+func (m *MockMeshes) Get(ctx context.Context, key *meta.Key) (*networkservicesga.Mesh, error) {
+	if m.GetHook != nil {
+		if intercept, obj, err := m.GetHook(ctx, key, m); intercept {
+			klog.V(5).Infof("MockMeshes.Get(%v, %s) = %+v, %v", ctx, key, obj, err)
+			return obj, err
+		}
+	}
+	if !key.Valid() {
+		return nil, fmt.Errorf("invalid GCE key (%+v)", key)
+	}
+
+	m.Lock.Lock()
+	defer m.Lock.Unlock()
+
+	if err, ok := m.GetError[*key]; ok {
+		klog.V(5).Infof("MockMeshes.Get(%v, %s) = nil, %v", ctx, key, err)
+		return nil, err
+	}
+	if obj, ok := m.Objects[*key]; ok {
+		typedObj := obj.ToGA()
+		klog.V(5).Infof("MockMeshes.Get(%v, %s) = %+v, nil", ctx, key, typedObj)
+		return typedObj, nil
+	}
+
+	err := &googleapi.Error{
+		Code:    http.StatusNotFound,
+		Message: fmt.Sprintf("MockMeshes %v not found", key),
+	}
+	klog.V(5).Infof("MockMeshes.Get(%v, %s) = nil, %v", ctx, key, err)
+	return nil, err
+}
+
+// List all of the objects in the mock.
+func (m *MockMeshes) List(ctx context.Context, fl *filter.F) ([]*networkservicesga.Mesh, error) {
+	if m.ListHook != nil {
+		if intercept, objs, err := m.ListHook(ctx, fl, m); intercept {
+			klog.V(5).Infof("MockMeshes.List(%v, %v) = [%v items], %v", ctx, fl, len(objs), err)
+			return objs, err
+		}
+	}
+
+	m.Lock.Lock()
+	defer m.Lock.Unlock()
+
+	if m.ListError != nil {
+		err := *m.ListError
+		klog.V(5).Infof("MockMeshes.List(%v, %v) = nil, %v", ctx, fl, err)
+
+		return nil, *m.ListError
+	}
+
+	var objs []*networkservicesga.Mesh
+	for _, obj := range m.Objects {
+		if !fl.Match(obj.ToGA()) {
+			continue
+		}
+		objs = append(objs, obj.ToGA())
+	}
+
+	klog.V(5).Infof("MockMeshes.List(%v, %v) = [%v items], nil", ctx, fl, len(objs))
+	return objs, nil
+}
+
+// Insert is a mock for inserting/creating a new object.
+func (m *MockMeshes) Insert(ctx context.Context, key *meta.Key, obj *networkservicesga.Mesh) error {
+	if m.InsertHook != nil {
+		if intercept, err := m.InsertHook(ctx, key, obj, m); intercept {
+			klog.V(5).Infof("MockMeshes.Insert(%v, %v, %+v) = %v", ctx, key, obj, err)
+			return err
+		}
+	}
+	if !key.Valid() {
+		return fmt.Errorf("invalid GCE key (%+v)", key)
+	}
+
+	m.Lock.Lock()
+	defer m.Lock.Unlock()
+
+	if err, ok := m.InsertError[*key]; ok {
+		klog.V(5).Infof("MockMeshes.Insert(%v, %v, %+v) = %v", ctx, key, obj, err)
+		return err
+	}
+	if _, ok := m.Objects[*key]; ok {
+		err := &googleapi.Error{
+			Code:    http.StatusConflict,
+			Message: fmt.Sprintf("MockMeshes %v exists", key),
+		}
+		klog.V(5).Infof("MockMeshes.Insert(%v, %v, %+v) = %v", ctx, key, obj, err)
+		return err
+	}
+
+	obj.Name = key.Name
+	projectID := m.ProjectRouter.ProjectID(ctx, "ga", "meshes")
+	obj.SelfLink = SelfLink(meta.VersionGA, projectID, "meshes", key)
+
+	m.Objects[*key] = &MockMeshesObj{obj}
+	klog.V(5).Infof("MockMeshes.Insert(%v, %v, %+v) = nil", ctx, key, obj)
+	return nil
+}
+
+// Delete is a mock for deleting the object.
+func (m *MockMeshes) Delete(ctx context.Context, key *meta.Key) error {
+	if m.DeleteHook != nil {
+		if intercept, err := m.DeleteHook(ctx, key, m); intercept {
+			klog.V(5).Infof("MockMeshes.Delete(%v, %v) = %v", ctx, key, err)
+			return err
+		}
+	}
+	if !key.Valid() {
+		return fmt.Errorf("invalid GCE key (%+v)", key)
+	}
+
+	m.Lock.Lock()
+	defer m.Lock.Unlock()
+
+	if err, ok := m.DeleteError[*key]; ok {
+		klog.V(5).Infof("MockMeshes.Delete(%v, %v) = %v", ctx, key, err)
+		return err
+	}
+	if _, ok := m.Objects[*key]; !ok {
+		err := &googleapi.Error{
+			Code:    http.StatusNotFound,
+			Message: fmt.Sprintf("MockMeshes %v not found", key),
+		}
+		klog.V(5).Infof("MockMeshes.Delete(%v, %v) = %v", ctx, key, err)
+		return err
+	}
+
+	delete(m.Objects, *key)
+	klog.V(5).Infof("MockMeshes.Delete(%v, %v) = nil", ctx, key)
+	return nil
+}
+
+// Obj wraps the object for use in the mock.
+func (m *MockMeshes) Obj(o *networkservicesga.Mesh) *MockMeshesObj {
+	return &MockMeshesObj{o}
+}
+
+// Patch is a mock for the corresponding method.
+func (m *MockMeshes) Patch(ctx context.Context, key *meta.Key, arg0 *networkservicesga.Mesh) error {
+	if m.PatchHook != nil {
+		return m.PatchHook(ctx, key, arg0, m)
+	}
+	return nil
+}
+
+// GCEMeshes is a simplifying adapter for the GCE Meshes.
+type GCEMeshes struct {
+	s *Service
+}
+
+// Get the Mesh named by key.
+func (g *GCEMeshes) Get(ctx context.Context, key *meta.Key) (*networkservicesga.Mesh, error) {
+	klog.V(5).Infof("GCEMeshes.Get(%v, %v): called", ctx, key)
+
+	if !key.Valid() {
+		klog.V(2).Infof("GCEMeshes.Get(%v, %v): key is invalid (%#v)", ctx, key, key)
+		return nil, fmt.Errorf("invalid GCE key (%#v)", key)
+	}
+	projectID := g.s.ProjectRouter.ProjectID(ctx, "ga", "Meshes")
+	ck := &CallContextKey{
+		ProjectID: projectID,
+		Operation: "Get",
+		Version:   meta.Version("ga"),
+		Service:   "Meshes",
+	}
+
+	klog.V(5).Infof("GCEMeshes.Get(%v, %v): projectID = %v, ck = %+v", ctx, key, projectID, ck)
+	callObserverStart(ctx, ck)
+	if err := g.s.RateLimiter.Accept(ctx, ck); err != nil {
+		klog.V(4).Infof("GCEMeshes.Get(%v, %v): RateLimiter error: %v", ctx, key, err)
+		return nil, err
+	}
+	name := fmt.Sprintf("projects/%s/locations/global/Meshes/%s", projectID, key.Name)
+	call := g.s.NetworkServicesGA.Meshes.Get(name)
+	call.Context(ctx)
+	v, err := call.Do()
+	klog.V(4).Infof("GCEMeshes.Get(%v, %v) = %+v, %v", ctx, key, v, err)
+
+	callObserverEnd(ctx, ck, err)
+	g.s.RateLimiter.Observe(ctx, err, ck)
+
+	return v, err
+}
+
+// List all Mesh objects.
+func (g *GCEMeshes) List(ctx context.Context, fl *filter.F) ([]*networkservicesga.Mesh, error) {
+	klog.V(5).Infof("GCEMeshes.List(%v, %v) called", ctx, fl)
+	projectID := g.s.ProjectRouter.ProjectID(ctx, "ga", "Meshes")
+	ck := &CallContextKey{
+		ProjectID: projectID,
+		Operation: "List",
+		Version:   meta.Version("ga"),
+		Service:   "Meshes",
+	}
+
+	callObserverStart(ctx, ck)
+	if err := g.s.RateLimiter.Accept(ctx, ck); err != nil {
+		return nil, err
+	}
+	klog.V(5).Infof("GCEMeshes.List(%v, %v): projectID = %v, ck = %+v", ctx, fl, projectID, ck)
+	call := g.s.NetworkServicesGA.Meshes.List(projectID)
+
+	var all []*networkservicesga.Mesh
+	f := func(l *networkservicesga.ListMeshesResponse) error {
+		klog.V(5).Infof("GCEMeshes.List(%v, ..., %v): page %+v", ctx, fl, l)
+		all = append(all, l.Meshes...)
+		return nil
+	}
+	if err := call.Pages(ctx, f); err != nil {
+		callObserverEnd(ctx, ck, err)
+		g.s.RateLimiter.Observe(ctx, err, ck)
+
+		klog.V(4).Infof("GCEMeshes.List(%v, ..., %v) = %v, %v", ctx, fl, nil, err)
+		return nil, err
+	}
+
+	callObserverEnd(ctx, ck, nil)
+	g.s.RateLimiter.Observe(ctx, nil, ck)
+
+	if kLogEnabled(4) {
+		klog.V(4).Infof("GCEMeshes.List(%v, ..., %v) = [%v items], %v", ctx, fl, len(all), nil)
+	} else if kLogEnabled(5) {
+		var asStr []string
+		for _, o := range all {
+			asStr = append(asStr, fmt.Sprintf("%+v", o))
+		}
+		klog.V(5).Infof("GCEMeshes.List(%v, ..., %v) = %v, %v", ctx, fl, asStr, nil)
+	}
+
+	return all, nil
+}
+
+// Insert Mesh with key of value obj.
+func (g *GCEMeshes) Insert(ctx context.Context, key *meta.Key, obj *networkservicesga.Mesh) error {
+	klog.V(5).Infof("GCEMeshes.Insert(%v, %v, %+v): called", ctx, key, obj)
+	if !key.Valid() {
+		klog.V(2).Infof("GCEMeshes.Insert(%v, %v, ...): key is invalid (%#v)", ctx, key, key)
+		return fmt.Errorf("invalid GCE key (%+v)", key)
+	}
+	projectID := g.s.ProjectRouter.ProjectID(ctx, "ga", "Meshes")
+	ck := &CallContextKey{
+		ProjectID: projectID,
+		Operation: "Insert",
+		Version:   meta.Version("ga"),
+		Service:   "Meshes",
+	}
+
+	klog.V(5).Infof("GCEMeshes.Insert(%v, %v, ...): projectID = %v, ck = %+v", ctx, key, projectID, ck)
+	callObserverStart(ctx, ck)
+	if err := g.s.RateLimiter.Accept(ctx, ck); err != nil {
+		klog.V(4).Infof("GCEMeshes.Insert(%v, %v, ...): RateLimiter error: %v", ctx, key, err)
+		return err
+	}
+	obj.Name = key.Name
+	parent := fmt.Sprintf("projects/%s/locations/global", projectID)
+	call := g.s.NetworkServicesGA.Meshes.Create(parent, obj)
+	call.Context(ctx)
+
+	op, err := call.Do()
+
+	callObserverEnd(ctx, ck, err)
+	g.s.RateLimiter.Observe(ctx, err, ck)
+
+	if err != nil {
+		klog.V(4).Infof("GCEMeshes.Insert(%v, %v, ...) = %+v", ctx, key, err)
+		return err
+	}
+
+	err = g.s.WaitForCompletion(ctx, op)
+	klog.V(4).Infof("GCEMeshes.Insert(%v, %v, %+v) = %+v", ctx, key, obj, err)
+	return err
+}
+
+// Delete the Mesh referenced by key.
+func (g *GCEMeshes) Delete(ctx context.Context, key *meta.Key) error {
+	klog.V(5).Infof("GCEMeshes.Delete(%v, %v): called", ctx, key)
+	if !key.Valid() {
+		klog.V(2).Infof("GCEMeshes.Delete(%v, %v): key is invalid (%#v)", ctx, key, key)
+		return fmt.Errorf("invalid GCE key (%+v)", key)
+	}
+	projectID := g.s.ProjectRouter.ProjectID(ctx, "ga", "Meshes")
+	ck := &CallContextKey{
+		ProjectID: projectID,
+		Operation: "Delete",
+		Version:   meta.Version("ga"),
+		Service:   "Meshes",
+	}
+	klog.V(5).Infof("GCEMeshes.Delete(%v, %v): projectID = %v, ck = %+v", ctx, key, projectID, ck)
+	callObserverStart(ctx, ck)
+	if err := g.s.RateLimiter.Accept(ctx, ck); err != nil {
+		klog.V(4).Infof("GCEMeshes.Delete(%v, %v): RateLimiter error: %v", ctx, key, err)
+		return err
+	}
+	name := fmt.Sprintf("projects/%s/locations/global/Meshes/%s", projectID, key.Name)
+	call := g.s.NetworkServicesGA.Meshes.Delete(name)
+
+	call.Context(ctx)
+
+	op, err := call.Do()
+
+	callObserverEnd(ctx, ck, err)
+	g.s.RateLimiter.Observe(ctx, err, ck)
+
+	if err != nil {
+		klog.V(4).Infof("GCEMeshes.Delete(%v, %v) = %v", ctx, key, err)
+		return err
+	}
+
+	err = g.s.WaitForCompletion(ctx, op)
+	klog.V(4).Infof("GCEMeshes.Delete(%v, %v) = %v", ctx, key, err)
+	return err
+}
+
+// Patch is a method on GCEMeshes.
+func (g *GCEMeshes) Patch(ctx context.Context, key *meta.Key, arg0 *networkservicesga.Mesh) error {
+	klog.V(5).Infof("GCEMeshes.Patch(%v, %v, ...): called", ctx, key)
+
+	if !key.Valid() {
+		klog.V(2).Infof("GCEMeshes.Patch(%v, %v, ...): key is invalid (%#v)", ctx, key, key)
+		return fmt.Errorf("invalid GCE key (%+v)", key)
+	}
+	projectID := g.s.ProjectRouter.ProjectID(ctx, "ga", "Meshes")
+	ck := &CallContextKey{
+		ProjectID: projectID,
+		Operation: "Patch",
+		Version:   meta.Version("ga"),
+		Service:   "Meshes",
+	}
+	klog.V(5).Infof("GCEMeshes.Patch(%v, %v, ...): projectID = %v, ck = %+v", ctx, key, projectID, ck)
+	callObserverStart(ctx, ck)
+	if err := g.s.RateLimiter.Accept(ctx, ck); err != nil {
+		klog.V(4).Infof("GCEMeshes.Patch(%v, %v, ...): RateLimiter error: %v", ctx, key, err)
+		return err
+	}
+	name := fmt.Sprintf("projects/%s/locations/global/Meshes/%s", projectID, key.Name)
+	call := g.s.NetworkServicesGA.Meshes.Patch(name, arg0)
+	call.Context(ctx)
+	op, err := call.Do()
+
+	if err != nil {
+		callObserverEnd(ctx, ck, err)
+		g.s.RateLimiter.Observe(ctx, err, ck)
+
+		klog.V(4).Infof("GCEMeshes.Patch(%v, %v, ...) = %+v", ctx, key, err)
+		return err
+	}
+
+	err = g.s.WaitForCompletion(ctx, op)
+
+	callObserverEnd(ctx, ck, err)
+	g.s.RateLimiter.Observe(ctx, err, ck) // XXX
+
+	klog.V(4).Infof("GCEMeshes.Patch(%v, %v, ...) = %+v", ctx, key, err)
+	return err
+}
+
+// BetaMeshes is an interface that allows for mocking of Meshes.
+type BetaMeshes interface {
+	Get(ctx context.Context, key *meta.Key) (*networkservicesbeta.Mesh, error)
+	List(ctx context.Context, fl *filter.F) ([]*networkservicesbeta.Mesh, error)
+	Insert(ctx context.Context, key *meta.Key, obj *networkservicesbeta.Mesh) error
+	Delete(ctx context.Context, key *meta.Key) error
+	Patch(context.Context, *meta.Key, *networkservicesbeta.Mesh) error
+}
+
+// NewMockBetaMeshes returns a new mock for Meshes.
+func NewMockBetaMeshes(pr ProjectRouter, objs map[meta.Key]*MockMeshesObj) *MockBetaMeshes {
+	mock := &MockBetaMeshes{
+		ProjectRouter: pr,
+
+		Objects:     objs,
+		GetError:    map[meta.Key]error{},
+		InsertError: map[meta.Key]error{},
+		DeleteError: map[meta.Key]error{},
+	}
+	return mock
+}
+
+// MockBetaMeshes is the mock for Meshes.
+type MockBetaMeshes struct {
+	Lock sync.Mutex
+
+	ProjectRouter ProjectRouter
+
+	// Objects maintained by the mock.
+	Objects map[meta.Key]*MockMeshesObj
+
+	// If an entry exists for the given key and operation, then the error
+	// will be returned instead of the operation.
+	GetError    map[meta.Key]error
+	ListError   *error
+	InsertError map[meta.Key]error
+	DeleteError map[meta.Key]error
+
+	// xxxHook allow you to intercept the standard processing of the mock in
+	// order to add your own logic. Return (true, _, _) to prevent the normal
+	// execution flow of the mock. Return (false, nil, nil) to continue with
+	// normal mock behavior/ after the hook function executes.
+	GetHook    func(ctx context.Context, key *meta.Key, m *MockBetaMeshes) (bool, *networkservicesbeta.Mesh, error)
+	ListHook   func(ctx context.Context, fl *filter.F, m *MockBetaMeshes) (bool, []*networkservicesbeta.Mesh, error)
+	InsertHook func(ctx context.Context, key *meta.Key, obj *networkservicesbeta.Mesh, m *MockBetaMeshes) (bool, error)
+	DeleteHook func(ctx context.Context, key *meta.Key, m *MockBetaMeshes) (bool, error)
+	PatchHook  func(context.Context, *meta.Key, *networkservicesbeta.Mesh, *MockBetaMeshes) error
+
+	// X is extra state that can be used as part of the mock. Generated code
+	// will not use this field.
+	X interface{}
+}
+
+// Get returns the object from the mock.
+func (m *MockBetaMeshes) Get(ctx context.Context, key *meta.Key) (*networkservicesbeta.Mesh, error) {
+	if m.GetHook != nil {
+		if intercept, obj, err := m.GetHook(ctx, key, m); intercept {
+			klog.V(5).Infof("MockBetaMeshes.Get(%v, %s) = %+v, %v", ctx, key, obj, err)
+			return obj, err
+		}
+	}
+	if !key.Valid() {
+		return nil, fmt.Errorf("invalid GCE key (%+v)", key)
+	}
+
+	m.Lock.Lock()
+	defer m.Lock.Unlock()
+
+	if err, ok := m.GetError[*key]; ok {
+		klog.V(5).Infof("MockBetaMeshes.Get(%v, %s) = nil, %v", ctx, key, err)
+		return nil, err
+	}
+	if obj, ok := m.Objects[*key]; ok {
+		typedObj := obj.ToBeta()
+		klog.V(5).Infof("MockBetaMeshes.Get(%v, %s) = %+v, nil", ctx, key, typedObj)
+		return typedObj, nil
+	}
+
+	err := &googleapi.Error{
+		Code:    http.StatusNotFound,
+		Message: fmt.Sprintf("MockBetaMeshes %v not found", key),
+	}
+	klog.V(5).Infof("MockBetaMeshes.Get(%v, %s) = nil, %v", ctx, key, err)
+	return nil, err
+}
+
+// List all of the objects in the mock.
+func (m *MockBetaMeshes) List(ctx context.Context, fl *filter.F) ([]*networkservicesbeta.Mesh, error) {
+	if m.ListHook != nil {
+		if intercept, objs, err := m.ListHook(ctx, fl, m); intercept {
+			klog.V(5).Infof("MockBetaMeshes.List(%v, %v) = [%v items], %v", ctx, fl, len(objs), err)
+			return objs, err
+		}
+	}
+
+	m.Lock.Lock()
+	defer m.Lock.Unlock()
+
+	if m.ListError != nil {
+		err := *m.ListError
+		klog.V(5).Infof("MockBetaMeshes.List(%v, %v) = nil, %v", ctx, fl, err)
+
+		return nil, *m.ListError
+	}
+
+	var objs []*networkservicesbeta.Mesh
+	for _, obj := range m.Objects {
+		if !fl.Match(obj.ToBeta()) {
+			continue
+		}
+		objs = append(objs, obj.ToBeta())
+	}
+
+	klog.V(5).Infof("MockBetaMeshes.List(%v, %v) = [%v items], nil", ctx, fl, len(objs))
+	return objs, nil
+}
+
+// Insert is a mock for inserting/creating a new object.
+func (m *MockBetaMeshes) Insert(ctx context.Context, key *meta.Key, obj *networkservicesbeta.Mesh) error {
+	if m.InsertHook != nil {
+		if intercept, err := m.InsertHook(ctx, key, obj, m); intercept {
+			klog.V(5).Infof("MockBetaMeshes.Insert(%v, %v, %+v) = %v", ctx, key, obj, err)
+			return err
+		}
+	}
+	if !key.Valid() {
+		return fmt.Errorf("invalid GCE key (%+v)", key)
+	}
+
+	m.Lock.Lock()
+	defer m.Lock.Unlock()
+
+	if err, ok := m.InsertError[*key]; ok {
+		klog.V(5).Infof("MockBetaMeshes.Insert(%v, %v, %+v) = %v", ctx, key, obj, err)
+		return err
+	}
+	if _, ok := m.Objects[*key]; ok {
+		err := &googleapi.Error{
+			Code:    http.StatusConflict,
+			Message: fmt.Sprintf("MockBetaMeshes %v exists", key),
+		}
+		klog.V(5).Infof("MockBetaMeshes.Insert(%v, %v, %+v) = %v", ctx, key, obj, err)
+		return err
+	}
+
+	obj.Name = key.Name
+	projectID := m.ProjectRouter.ProjectID(ctx, "beta", "meshes")
+	obj.SelfLink = SelfLink(meta.VersionBeta, projectID, "meshes", key)
+
+	m.Objects[*key] = &MockMeshesObj{obj}
+	klog.V(5).Infof("MockBetaMeshes.Insert(%v, %v, %+v) = nil", ctx, key, obj)
+	return nil
+}
+
+// Delete is a mock for deleting the object.
+func (m *MockBetaMeshes) Delete(ctx context.Context, key *meta.Key) error {
+	if m.DeleteHook != nil {
+		if intercept, err := m.DeleteHook(ctx, key, m); intercept {
+			klog.V(5).Infof("MockBetaMeshes.Delete(%v, %v) = %v", ctx, key, err)
+			return err
+		}
+	}
+	if !key.Valid() {
+		return fmt.Errorf("invalid GCE key (%+v)", key)
+	}
+
+	m.Lock.Lock()
+	defer m.Lock.Unlock()
+
+	if err, ok := m.DeleteError[*key]; ok {
+		klog.V(5).Infof("MockBetaMeshes.Delete(%v, %v) = %v", ctx, key, err)
+		return err
+	}
+	if _, ok := m.Objects[*key]; !ok {
+		err := &googleapi.Error{
+			Code:    http.StatusNotFound,
+			Message: fmt.Sprintf("MockBetaMeshes %v not found", key),
+		}
+		klog.V(5).Infof("MockBetaMeshes.Delete(%v, %v) = %v", ctx, key, err)
+		return err
+	}
+
+	delete(m.Objects, *key)
+	klog.V(5).Infof("MockBetaMeshes.Delete(%v, %v) = nil", ctx, key)
+	return nil
+}
+
+// Obj wraps the object for use in the mock.
+func (m *MockBetaMeshes) Obj(o *networkservicesbeta.Mesh) *MockMeshesObj {
+	return &MockMeshesObj{o}
+}
+
+// Patch is a mock for the corresponding method.
+func (m *MockBetaMeshes) Patch(ctx context.Context, key *meta.Key, arg0 *networkservicesbeta.Mesh) error {
+	if m.PatchHook != nil {
+		return m.PatchHook(ctx, key, arg0, m)
+	}
+	return nil
+}
+
+// GCEBetaMeshes is a simplifying adapter for the GCE Meshes.
+type GCEBetaMeshes struct {
+	s *Service
+}
+
+// Get the Mesh named by key.
+func (g *GCEBetaMeshes) Get(ctx context.Context, key *meta.Key) (*networkservicesbeta.Mesh, error) {
+	klog.V(5).Infof("GCEBetaMeshes.Get(%v, %v): called", ctx, key)
+
+	if !key.Valid() {
+		klog.V(2).Infof("GCEBetaMeshes.Get(%v, %v): key is invalid (%#v)", ctx, key, key)
+		return nil, fmt.Errorf("invalid GCE key (%#v)", key)
+	}
+	projectID := g.s.ProjectRouter.ProjectID(ctx, "beta", "Meshes")
+	ck := &CallContextKey{
+		ProjectID: projectID,
+		Operation: "Get",
+		Version:   meta.Version("beta"),
+		Service:   "Meshes",
+	}
+
+	klog.V(5).Infof("GCEBetaMeshes.Get(%v, %v): projectID = %v, ck = %+v", ctx, key, projectID, ck)
+	callObserverStart(ctx, ck)
+	if err := g.s.RateLimiter.Accept(ctx, ck); err != nil {
+		klog.V(4).Infof("GCEBetaMeshes.Get(%v, %v): RateLimiter error: %v", ctx, key, err)
+		return nil, err
+	}
+	name := fmt.Sprintf("projects/%s/locations/global/Meshes/%s", projectID, key.Name)
+	call := g.s.NetworkServicesBeta.Meshes.Get(name)
+	call.Context(ctx)
+	v, err := call.Do()
+	klog.V(4).Infof("GCEBetaMeshes.Get(%v, %v) = %+v, %v", ctx, key, v, err)
+
+	callObserverEnd(ctx, ck, err)
+	g.s.RateLimiter.Observe(ctx, err, ck)
+
+	return v, err
+}
+
+// List all Mesh objects.
+func (g *GCEBetaMeshes) List(ctx context.Context, fl *filter.F) ([]*networkservicesbeta.Mesh, error) {
+	klog.V(5).Infof("GCEBetaMeshes.List(%v, %v) called", ctx, fl)
+	projectID := g.s.ProjectRouter.ProjectID(ctx, "beta", "Meshes")
+	ck := &CallContextKey{
+		ProjectID: projectID,
+		Operation: "List",
+		Version:   meta.Version("beta"),
+		Service:   "Meshes",
+	}
+
+	callObserverStart(ctx, ck)
+	if err := g.s.RateLimiter.Accept(ctx, ck); err != nil {
+		return nil, err
+	}
+	klog.V(5).Infof("GCEBetaMeshes.List(%v, %v): projectID = %v, ck = %+v", ctx, fl, projectID, ck)
+	call := g.s.NetworkServicesBeta.Meshes.List(projectID)
+
+	var all []*networkservicesbeta.Mesh
+	f := func(l *networkservicesbeta.ListMeshesResponse) error {
+		klog.V(5).Infof("GCEBetaMeshes.List(%v, ..., %v): page %+v", ctx, fl, l)
+		all = append(all, l.Meshes...)
+		return nil
+	}
+	if err := call.Pages(ctx, f); err != nil {
+		callObserverEnd(ctx, ck, err)
+		g.s.RateLimiter.Observe(ctx, err, ck)
+
+		klog.V(4).Infof("GCEBetaMeshes.List(%v, ..., %v) = %v, %v", ctx, fl, nil, err)
+		return nil, err
+	}
+
+	callObserverEnd(ctx, ck, nil)
+	g.s.RateLimiter.Observe(ctx, nil, ck)
+
+	if kLogEnabled(4) {
+		klog.V(4).Infof("GCEBetaMeshes.List(%v, ..., %v) = [%v items], %v", ctx, fl, len(all), nil)
+	} else if kLogEnabled(5) {
+		var asStr []string
+		for _, o := range all {
+			asStr = append(asStr, fmt.Sprintf("%+v", o))
+		}
+		klog.V(5).Infof("GCEBetaMeshes.List(%v, ..., %v) = %v, %v", ctx, fl, asStr, nil)
+	}
+
+	return all, nil
+}
+
+// Insert Mesh with key of value obj.
+func (g *GCEBetaMeshes) Insert(ctx context.Context, key *meta.Key, obj *networkservicesbeta.Mesh) error {
+	klog.V(5).Infof("GCEBetaMeshes.Insert(%v, %v, %+v): called", ctx, key, obj)
+	if !key.Valid() {
+		klog.V(2).Infof("GCEBetaMeshes.Insert(%v, %v, ...): key is invalid (%#v)", ctx, key, key)
+		return fmt.Errorf("invalid GCE key (%+v)", key)
+	}
+	projectID := g.s.ProjectRouter.ProjectID(ctx, "beta", "Meshes")
+	ck := &CallContextKey{
+		ProjectID: projectID,
+		Operation: "Insert",
+		Version:   meta.Version("beta"),
+		Service:   "Meshes",
+	}
+
+	klog.V(5).Infof("GCEBetaMeshes.Insert(%v, %v, ...): projectID = %v, ck = %+v", ctx, key, projectID, ck)
+	callObserverStart(ctx, ck)
+	if err := g.s.RateLimiter.Accept(ctx, ck); err != nil {
+		klog.V(4).Infof("GCEBetaMeshes.Insert(%v, %v, ...): RateLimiter error: %v", ctx, key, err)
+		return err
+	}
+	obj.Name = key.Name
+	parent := fmt.Sprintf("projects/%s/locations/global", projectID)
+	call := g.s.NetworkServicesBeta.Meshes.Create(parent, obj)
+	call.Context(ctx)
+
+	op, err := call.Do()
+
+	callObserverEnd(ctx, ck, err)
+	g.s.RateLimiter.Observe(ctx, err, ck)
+
+	if err != nil {
+		klog.V(4).Infof("GCEBetaMeshes.Insert(%v, %v, ...) = %+v", ctx, key, err)
+		return err
+	}
+
+	err = g.s.WaitForCompletion(ctx, op)
+	klog.V(4).Infof("GCEBetaMeshes.Insert(%v, %v, %+v) = %+v", ctx, key, obj, err)
+	return err
+}
+
+// Delete the Mesh referenced by key.
+func (g *GCEBetaMeshes) Delete(ctx context.Context, key *meta.Key) error {
+	klog.V(5).Infof("GCEBetaMeshes.Delete(%v, %v): called", ctx, key)
+	if !key.Valid() {
+		klog.V(2).Infof("GCEBetaMeshes.Delete(%v, %v): key is invalid (%#v)", ctx, key, key)
+		return fmt.Errorf("invalid GCE key (%+v)", key)
+	}
+	projectID := g.s.ProjectRouter.ProjectID(ctx, "beta", "Meshes")
+	ck := &CallContextKey{
+		ProjectID: projectID,
+		Operation: "Delete",
+		Version:   meta.Version("beta"),
+		Service:   "Meshes",
+	}
+	klog.V(5).Infof("GCEBetaMeshes.Delete(%v, %v): projectID = %v, ck = %+v", ctx, key, projectID, ck)
+	callObserverStart(ctx, ck)
+	if err := g.s.RateLimiter.Accept(ctx, ck); err != nil {
+		klog.V(4).Infof("GCEBetaMeshes.Delete(%v, %v): RateLimiter error: %v", ctx, key, err)
+		return err
+	}
+	name := fmt.Sprintf("projects/%s/locations/global/Meshes/%s", projectID, key.Name)
+	call := g.s.NetworkServicesBeta.Meshes.Delete(name)
+
+	call.Context(ctx)
+
+	op, err := call.Do()
+
+	callObserverEnd(ctx, ck, err)
+	g.s.RateLimiter.Observe(ctx, err, ck)
+
+	if err != nil {
+		klog.V(4).Infof("GCEBetaMeshes.Delete(%v, %v) = %v", ctx, key, err)
+		return err
+	}
+
+	err = g.s.WaitForCompletion(ctx, op)
+	klog.V(4).Infof("GCEBetaMeshes.Delete(%v, %v) = %v", ctx, key, err)
+	return err
+}
+
+// Patch is a method on GCEBetaMeshes.
+func (g *GCEBetaMeshes) Patch(ctx context.Context, key *meta.Key, arg0 *networkservicesbeta.Mesh) error {
+	klog.V(5).Infof("GCEBetaMeshes.Patch(%v, %v, ...): called", ctx, key)
+
+	if !key.Valid() {
+		klog.V(2).Infof("GCEBetaMeshes.Patch(%v, %v, ...): key is invalid (%#v)", ctx, key, key)
+		return fmt.Errorf("invalid GCE key (%+v)", key)
+	}
+	projectID := g.s.ProjectRouter.ProjectID(ctx, "beta", "Meshes")
+	ck := &CallContextKey{
+		ProjectID: projectID,
+		Operation: "Patch",
+		Version:   meta.Version("beta"),
+		Service:   "Meshes",
+	}
+	klog.V(5).Infof("GCEBetaMeshes.Patch(%v, %v, ...): projectID = %v, ck = %+v", ctx, key, projectID, ck)
+	callObserverStart(ctx, ck)
+	if err := g.s.RateLimiter.Accept(ctx, ck); err != nil {
+		klog.V(4).Infof("GCEBetaMeshes.Patch(%v, %v, ...): RateLimiter error: %v", ctx, key, err)
+		return err
+	}
+	name := fmt.Sprintf("projects/%s/locations/global/Meshes/%s", projectID, key.Name)
+	call := g.s.NetworkServicesBeta.Meshes.Patch(name, arg0)
+	call.Context(ctx)
+	op, err := call.Do()
+
+	if err != nil {
+		callObserverEnd(ctx, ck, err)
+		g.s.RateLimiter.Observe(ctx, err, ck)
+
+		klog.V(4).Infof("GCEBetaMeshes.Patch(%v, %v, ...) = %+v", ctx, key, err)
+		return err
+	}
+
+	err = g.s.WaitForCompletion(ctx, op)
+
+	callObserverEnd(ctx, ck, err)
+	g.s.RateLimiter.Observe(ctx, err, ck) // XXX
+
+	klog.V(4).Infof("GCEBetaMeshes.Patch(%v, %v, ...) = %+v", ctx, key, err)
+	return err
 }
 
 // NewAddressesResourceID creates a ResourceID for the Addresses resource.
@@ -45136,6 +47044,12 @@ func NewInstanceTemplatesResourceID(project, name string) *ResourceID {
 func NewInstancesResourceID(project, zone, name string) *ResourceID {
 	key := meta.ZonalKey(name, zone)
 	return &ResourceID{project, "instances", key}
+}
+
+// NewMeshesResourceID creates a ResourceID for the Meshes resource.
+func NewMeshesResourceID(project, name string) *ResourceID {
+	key := meta.GlobalKey(name)
+	return &ResourceID{project, "meshes", key}
 }
 
 // NewNetworkEndpointGroupsResourceID creates a ResourceID for the NetworkEndpointGroups resource.
@@ -45280,6 +47194,12 @@ func NewTargetPoolsResourceID(project, region, name string) *ResourceID {
 func NewTargetTcpProxiesResourceID(project, name string) *ResourceID {
 	key := meta.GlobalKey(name)
 	return &ResourceID{project, "targetTcpProxies", key}
+}
+
+// NewTcpRoutesResourceID creates a ResourceID for the TcpRoutes resource.
+func NewTcpRoutesResourceID(project, name string) *ResourceID {
+	key := meta.GlobalKey(name)
+	return &ResourceID{project, "tcpRoutes", key}
 }
 
 // NewUrlMapsResourceID creates a ResourceID for the UrlMaps resource.

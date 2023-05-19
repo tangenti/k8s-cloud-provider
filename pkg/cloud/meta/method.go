@@ -67,6 +67,10 @@ func (a *arg) normalizedPkg() string {
 		return "alpha."
 	case "google.golang.org/api/compute/v0.beta":
 		return "beta."
+	case "google.golang.org/api/networkservices/v1":
+		return "networkservicesga."
+	case "google.golang.org/api/networkservices/v1beta1":
+		return "networkservicesbeta."
 	default:
 		panic(fmt.Errorf("unhandled package %q", a.pkg))
 	}
@@ -137,6 +141,9 @@ func (m *Method) IsGet() bool {
 // argsSkip is the number of arguments to skip when generating the
 // synthesized method.
 func (m *Method) argsSkip() int {
+	if m.ServiceInfo.APIGroup == NetworkServicesAPIGroup {
+		return 2
+	}
 	switch m.keyType {
 	case Zonal:
 		return 4
