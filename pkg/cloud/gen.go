@@ -46959,257 +46959,257 @@ func (g *GCEBetaMeshes) Patch(ctx context.Context, key *meta.Key, arg0 *networks
 // NewAddressesResourceID creates a ResourceID for the Addresses resource.
 func NewAddressesResourceID(project, region, name string) *ResourceID {
 	key := meta.RegionalKey(name, region)
-	return &ResourceID{project, "addresses", key}
+	return &ResourceID{project, "addresses", key, ""}
 }
 
 // NewBackendServicesResourceID creates a ResourceID for the BackendServices resource.
 func NewBackendServicesResourceID(project, name string) *ResourceID {
 	key := meta.GlobalKey(name)
-	return &ResourceID{project, "backendServices", key}
+	return &ResourceID{project, "backendServices", key, ""}
 }
 
 // NewDisksResourceID creates a ResourceID for the Disks resource.
 func NewDisksResourceID(project, zone, name string) *ResourceID {
 	key := meta.ZonalKey(name, zone)
-	return &ResourceID{project, "disks", key}
+	return &ResourceID{project, "disks", key, ""}
 }
 
 // NewFirewallsResourceID creates a ResourceID for the Firewalls resource.
 func NewFirewallsResourceID(project, name string) *ResourceID {
 	key := meta.GlobalKey(name)
-	return &ResourceID{project, "firewalls", key}
+	return &ResourceID{project, "firewalls", key, ""}
 }
 
 // NewForwardingRulesResourceID creates a ResourceID for the ForwardingRules resource.
 func NewForwardingRulesResourceID(project, region, name string) *ResourceID {
 	key := meta.RegionalKey(name, region)
-	return &ResourceID{project, "forwardingRules", key}
+	return &ResourceID{project, "forwardingRules", key, ""}
 }
 
 // NewGlobalAddressesResourceID creates a ResourceID for the GlobalAddresses resource.
 func NewGlobalAddressesResourceID(project, name string) *ResourceID {
 	key := meta.GlobalKey(name)
-	return &ResourceID{project, "addresses", key}
+	return &ResourceID{project, "addresses", key, ""}
 }
 
 // NewGlobalForwardingRulesResourceID creates a ResourceID for the GlobalForwardingRules resource.
 func NewGlobalForwardingRulesResourceID(project, name string) *ResourceID {
 	key := meta.GlobalKey(name)
-	return &ResourceID{project, "forwardingRules", key}
+	return &ResourceID{project, "forwardingRules", key, ""}
 }
 
 // NewHealthChecksResourceID creates a ResourceID for the HealthChecks resource.
 func NewHealthChecksResourceID(project, name string) *ResourceID {
 	key := meta.GlobalKey(name)
-	return &ResourceID{project, "healthChecks", key}
+	return &ResourceID{project, "healthChecks", key, ""}
 }
 
 // NewHttpHealthChecksResourceID creates a ResourceID for the HttpHealthChecks resource.
 func NewHttpHealthChecksResourceID(project, name string) *ResourceID {
 	key := meta.GlobalKey(name)
-	return &ResourceID{project, "httpHealthChecks", key}
+	return &ResourceID{project, "httpHealthChecks", key, ""}
 }
 
 // NewHttpsHealthChecksResourceID creates a ResourceID for the HttpsHealthChecks resource.
 func NewHttpsHealthChecksResourceID(project, name string) *ResourceID {
 	key := meta.GlobalKey(name)
-	return &ResourceID{project, "httpsHealthChecks", key}
+	return &ResourceID{project, "httpsHealthChecks", key, ""}
 }
 
 // NewImagesResourceID creates a ResourceID for the Images resource.
 func NewImagesResourceID(project, name string) *ResourceID {
 	key := meta.GlobalKey(name)
-	return &ResourceID{project, "Images", key}
+	return &ResourceID{project, "Images", key, ""}
 }
 
 // NewInstanceGroupManagersResourceID creates a ResourceID for the InstanceGroupManagers resource.
 func NewInstanceGroupManagersResourceID(project, zone, name string) *ResourceID {
 	key := meta.ZonalKey(name, zone)
-	return &ResourceID{project, "instanceGroupManagers", key}
+	return &ResourceID{project, "instanceGroupManagers", key, ""}
 }
 
 // NewInstanceGroupsResourceID creates a ResourceID for the InstanceGroups resource.
 func NewInstanceGroupsResourceID(project, zone, name string) *ResourceID {
 	key := meta.ZonalKey(name, zone)
-	return &ResourceID{project, "instanceGroups", key}
+	return &ResourceID{project, "instanceGroups", key, ""}
 }
 
 // NewInstanceTemplatesResourceID creates a ResourceID for the InstanceTemplates resource.
 func NewInstanceTemplatesResourceID(project, name string) *ResourceID {
 	key := meta.GlobalKey(name)
-	return &ResourceID{project, "instanceTemplates", key}
+	return &ResourceID{project, "instanceTemplates", key, ""}
 }
 
 // NewInstancesResourceID creates a ResourceID for the Instances resource.
 func NewInstancesResourceID(project, zone, name string) *ResourceID {
 	key := meta.ZonalKey(name, zone)
-	return &ResourceID{project, "instances", key}
+	return &ResourceID{project, "instances", key, ""}
 }
 
 // NewMeshesResourceID creates a ResourceID for the Meshes resource.
 func NewMeshesResourceID(project, name string) *ResourceID {
 	key := meta.GlobalKey(name)
-	return &ResourceID{project, "meshes", key}
+	return &ResourceID{project, "meshes", key, "networkservices"}
 }
 
 // NewNetworkEndpointGroupsResourceID creates a ResourceID for the NetworkEndpointGroups resource.
 func NewNetworkEndpointGroupsResourceID(project, zone, name string) *ResourceID {
 	key := meta.ZonalKey(name, zone)
-	return &ResourceID{project, "networkEndpointGroups", key}
+	return &ResourceID{project, "networkEndpointGroups", key, ""}
 }
 
 // NewNetworkFirewallPoliciesResourceID creates a ResourceID for the NetworkFirewallPolicies resource.
 func NewNetworkFirewallPoliciesResourceID(project, name string) *ResourceID {
 	key := meta.GlobalKey(name)
-	return &ResourceID{project, "networkFirewallPolicies", key}
+	return &ResourceID{project, "networkFirewallPolicies", key, ""}
 }
 
 // NewNetworksResourceID creates a ResourceID for the Networks resource.
 func NewNetworksResourceID(project, name string) *ResourceID {
 	key := meta.GlobalKey(name)
-	return &ResourceID{project, "networks", key}
+	return &ResourceID{project, "networks", key, ""}
 }
 
 // NewProjectsResourceID creates a ResourceID for the Projects resource.
 func NewProjectsResourceID(project string) *ResourceID {
 	var key *meta.Key
-	return &ResourceID{project, "projects", key}
+	return &ResourceID{project, "projects", key, ""}
 }
 
 // NewRegionBackendServicesResourceID creates a ResourceID for the RegionBackendServices resource.
 func NewRegionBackendServicesResourceID(project, region, name string) *ResourceID {
 	key := meta.RegionalKey(name, region)
-	return &ResourceID{project, "backendServices", key}
+	return &ResourceID{project, "backendServices", key, ""}
 }
 
 // NewRegionDisksResourceID creates a ResourceID for the RegionDisks resource.
 func NewRegionDisksResourceID(project, region, name string) *ResourceID {
 	key := meta.RegionalKey(name, region)
-	return &ResourceID{project, "disks", key}
+	return &ResourceID{project, "disks", key, ""}
 }
 
 // NewRegionHealthChecksResourceID creates a ResourceID for the RegionHealthChecks resource.
 func NewRegionHealthChecksResourceID(project, region, name string) *ResourceID {
 	key := meta.RegionalKey(name, region)
-	return &ResourceID{project, "healthChecks", key}
+	return &ResourceID{project, "healthChecks", key, ""}
 }
 
 // NewRegionNetworkFirewallPoliciesResourceID creates a ResourceID for the RegionNetworkFirewallPolicies resource.
 func NewRegionNetworkFirewallPoliciesResourceID(project, region, name string) *ResourceID {
 	key := meta.RegionalKey(name, region)
-	return &ResourceID{project, "regionNetworkFirewallPolicies", key}
+	return &ResourceID{project, "regionNetworkFirewallPolicies", key, ""}
 }
 
 // NewRegionSslCertificatesResourceID creates a ResourceID for the RegionSslCertificates resource.
 func NewRegionSslCertificatesResourceID(project, region, name string) *ResourceID {
 	key := meta.RegionalKey(name, region)
-	return &ResourceID{project, "sslCertificates", key}
+	return &ResourceID{project, "sslCertificates", key, ""}
 }
 
 // NewRegionTargetHttpProxiesResourceID creates a ResourceID for the RegionTargetHttpProxies resource.
 func NewRegionTargetHttpProxiesResourceID(project, region, name string) *ResourceID {
 	key := meta.RegionalKey(name, region)
-	return &ResourceID{project, "targetHttpProxies", key}
+	return &ResourceID{project, "targetHttpProxies", key, ""}
 }
 
 // NewRegionTargetHttpsProxiesResourceID creates a ResourceID for the RegionTargetHttpsProxies resource.
 func NewRegionTargetHttpsProxiesResourceID(project, region, name string) *ResourceID {
 	key := meta.RegionalKey(name, region)
-	return &ResourceID{project, "targetHttpsProxies", key}
+	return &ResourceID{project, "targetHttpsProxies", key, ""}
 }
 
 // NewRegionUrlMapsResourceID creates a ResourceID for the RegionUrlMaps resource.
 func NewRegionUrlMapsResourceID(project, region, name string) *ResourceID {
 	key := meta.RegionalKey(name, region)
-	return &ResourceID{project, "urlMaps", key}
+	return &ResourceID{project, "urlMaps", key, ""}
 }
 
 // NewRegionsResourceID creates a ResourceID for the Regions resource.
 func NewRegionsResourceID(project, name string) *ResourceID {
 	key := meta.GlobalKey(name)
-	return &ResourceID{project, "regions", key}
+	return &ResourceID{project, "regions", key, ""}
 }
 
 // NewRoutersResourceID creates a ResourceID for the Routers resource.
 func NewRoutersResourceID(project, region, name string) *ResourceID {
 	key := meta.RegionalKey(name, region)
-	return &ResourceID{project, "routers", key}
+	return &ResourceID{project, "routers", key, ""}
 }
 
 // NewRoutesResourceID creates a ResourceID for the Routes resource.
 func NewRoutesResourceID(project, name string) *ResourceID {
 	key := meta.GlobalKey(name)
-	return &ResourceID{project, "routes", key}
+	return &ResourceID{project, "routes", key, ""}
 }
 
 // NewSecurityPoliciesResourceID creates a ResourceID for the SecurityPolicies resource.
 func NewSecurityPoliciesResourceID(project, name string) *ResourceID {
 	key := meta.GlobalKey(name)
-	return &ResourceID{project, "securityPolicies", key}
+	return &ResourceID{project, "securityPolicies", key, ""}
 }
 
 // NewServiceAttachmentsResourceID creates a ResourceID for the ServiceAttachments resource.
 func NewServiceAttachmentsResourceID(project, region, name string) *ResourceID {
 	key := meta.RegionalKey(name, region)
-	return &ResourceID{project, "serviceAttachments", key}
+	return &ResourceID{project, "serviceAttachments", key, ""}
 }
 
 // NewSslCertificatesResourceID creates a ResourceID for the SslCertificates resource.
 func NewSslCertificatesResourceID(project, name string) *ResourceID {
 	key := meta.GlobalKey(name)
-	return &ResourceID{project, "sslCertificates", key}
+	return &ResourceID{project, "sslCertificates", key, ""}
 }
 
 // NewSslPoliciesResourceID creates a ResourceID for the SslPolicies resource.
 func NewSslPoliciesResourceID(project, name string) *ResourceID {
 	key := meta.GlobalKey(name)
-	return &ResourceID{project, "sslPolicies", key}
+	return &ResourceID{project, "sslPolicies", key, ""}
 }
 
 // NewSubnetworksResourceID creates a ResourceID for the Subnetworks resource.
 func NewSubnetworksResourceID(project, region, name string) *ResourceID {
 	key := meta.RegionalKey(name, region)
-	return &ResourceID{project, "subnetworks", key}
+	return &ResourceID{project, "subnetworks", key, ""}
 }
 
 // NewTargetHttpProxiesResourceID creates a ResourceID for the TargetHttpProxies resource.
 func NewTargetHttpProxiesResourceID(project, name string) *ResourceID {
 	key := meta.GlobalKey(name)
-	return &ResourceID{project, "targetHttpProxies", key}
+	return &ResourceID{project, "targetHttpProxies", key, ""}
 }
 
 // NewTargetHttpsProxiesResourceID creates a ResourceID for the TargetHttpsProxies resource.
 func NewTargetHttpsProxiesResourceID(project, name string) *ResourceID {
 	key := meta.GlobalKey(name)
-	return &ResourceID{project, "targetHttpsProxies", key}
+	return &ResourceID{project, "targetHttpsProxies", key, ""}
 }
 
 // NewTargetPoolsResourceID creates a ResourceID for the TargetPools resource.
 func NewTargetPoolsResourceID(project, region, name string) *ResourceID {
 	key := meta.RegionalKey(name, region)
-	return &ResourceID{project, "targetPools", key}
+	return &ResourceID{project, "targetPools", key, ""}
 }
 
 // NewTargetTcpProxiesResourceID creates a ResourceID for the TargetTcpProxies resource.
 func NewTargetTcpProxiesResourceID(project, name string) *ResourceID {
 	key := meta.GlobalKey(name)
-	return &ResourceID{project, "targetTcpProxies", key}
+	return &ResourceID{project, "targetTcpProxies", key, ""}
 }
 
 // NewTcpRoutesResourceID creates a ResourceID for the TcpRoutes resource.
 func NewTcpRoutesResourceID(project, name string) *ResourceID {
 	key := meta.GlobalKey(name)
-	return &ResourceID{project, "tcpRoutes", key}
+	return &ResourceID{project, "tcpRoutes", key, "networkservices"}
 }
 
 // NewUrlMapsResourceID creates a ResourceID for the UrlMaps resource.
 func NewUrlMapsResourceID(project, name string) *ResourceID {
 	key := meta.GlobalKey(name)
-	return &ResourceID{project, "urlMaps", key}
+	return &ResourceID{project, "urlMaps", key, ""}
 }
 
 // NewZonesResourceID creates a ResourceID for the Zones resource.
 func NewZonesResourceID(project, name string) *ResourceID {
 	key := meta.GlobalKey(name)
-	return &ResourceID{project, "zones", key}
+	return &ResourceID{project, "zones", key, ""}
 }

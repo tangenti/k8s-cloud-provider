@@ -19,6 +19,9 @@ package meta
 // Version of the API (ga, alpha, beta).
 type Version string
 
+// APIGroup is the API Group of the resource. When unspecified, "compute" is assumed.
+type APIGroup string
+
 const (
 	// NoGet prevents the Get() method from being generated.
 	NoGet = 1 << iota
@@ -41,12 +44,18 @@ const (
 	// have insert() or delete() methods generated for the wrapper.
 	ReadOnly = NoDelete | NoInsert
 
-	// VersionGA is the API version in compute.v1.
+	// VersionGA is the GA API version.
 	VersionGA Version = "ga"
-	// VersionAlpha is the API version in computer.v0.alpha.
+	// VersionAlpha is the alpha API version.
 	VersionAlpha Version = "alpha"
-	// VersionBeta is the API version in computer.v0.beta.
+	// VersionBeta is the beta API version.
 	VersionBeta Version = "beta"
+
+	// APIGroupCompute is the Compute API group.
+	APIGroupCompute APIGroup = ""
+
+	// APIGroupNetworkServices is the Network Services API group.
+	APIGroupNetworkServices APIGroup = "networkservices"
 )
 
 // AllVersions is a list of all versions of the GCE API.

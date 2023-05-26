@@ -25,17 +25,21 @@ import (
 )
 
 var (
-	gaPrefix    = "https://www.googleapis.com/compute/v1"
-	alphaPrefix = "https://www.googleapis.com/compute/alpha"
-	betaPrefix  = "https://www.googleapis.com/compute/beta"
+	alphaPrefix               = "https://www.googleapis.com/compute/alpha"
+	betaPrefix                = "https://www.googleapis.com/compute/beta"
+	gaPrefix                  = "https://www.googleapis.com/compute/v1"
+	networkServicesBetaPrefix = "https://www.googleapis.com/networkservices/v1beta1"
+	networkServicesGaPrefix   = "https://www.googleapis.com/networkservices/v1"
 )
 
 // SetAPIDomain sets the root of the URL for the API. The default domain is
 // "https://www.googleapis.com".
 func SetAPIDomain(domain string) {
-	gaPrefix = domain + "/compute/v1"
 	alphaPrefix = domain + "/compute/alpha"
 	betaPrefix = domain + "/compute/beta"
+	gaPrefix = domain + "/compute/v1"
+	networkServicesBetaPrefix = domain + "/networkservices/v1beta1"
+	networkServicesGaPrefix = domain + "/networkservices/v1"
 }
 
 // ResourceID identifies a GCE resource as parsed from compute resource URL.
@@ -43,6 +47,9 @@ type ResourceID struct {
 	ProjectID string
 	Resource  string
 	Key       *meta.Key
+	// APIGroup identifies the API Group of the resource. If unspecified,
+	// "compute" is assumed
+	APIGroup meta.APIGroup
 }
 
 // Equal returns true if two resource IDs are equal.

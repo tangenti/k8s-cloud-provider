@@ -130,7 +130,7 @@ import (
 
 	var hasGA, hasAlpha, hasBeta, hasNetworkServicesGA, hasNetworkServicesBeta bool
 	for _, s := range meta.AllServices {
-		if s.APIGroup == meta.NetworkServicesAPIGroup {
+		if s.APIGroup == meta.APIGroupNetworkServices {
 			switch s.Version() {
 			case meta.VersionBeta:
 				hasNetworkServicesBeta = true
@@ -1221,7 +1221,7 @@ func New{{.Service}}ResourceID(project, zone, name string) *ResourceID {
 	key := meta.ZonalKey(name, zone)
 {{- end -}}
 {{end}}
-	return &ResourceID{project, "{{.Resource}}", key}
+	return &ResourceID{project, "{{.Resource}}", key, "{{.APIGroup}}"}
 }
 `
 	tmpl := template.Must(template.New("resourceIDs").Parse(text))

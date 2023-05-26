@@ -27,14 +27,12 @@ func init() {
 	AllServices = append(AllServices, NetworkServices...)
 }
 
-const NetworkServicesAPIGroup = "networkservices"
-
 var NetworkServices = []*ServiceInfo{
 	{
 		Object:      "TcpRoute",
 		Service:     "TcpRoutes",
 		Resource:    "tcpRoutes",
-		APIGroup:    NetworkServicesAPIGroup,
+		APIGroup:    APIGroupNetworkServices,
 		version:     VersionGA,
 		keyType:     Global,
 		serviceType: reflect.TypeOf(&ga.ProjectsLocationsTcpRoutesService{}),
@@ -46,7 +44,7 @@ var NetworkServices = []*ServiceInfo{
 		Object:      "TcpRoute",
 		Service:     "TcpRoutes",
 		Resource:    "tcpRoutes",
-		APIGroup:    NetworkServicesAPIGroup,
+		APIGroup:    APIGroupNetworkServices,
 		version:     VersionBeta,
 		keyType:     Global,
 		serviceType: reflect.TypeOf(&beta.ProjectsLocationsTcpRoutesService{}),
@@ -58,7 +56,7 @@ var NetworkServices = []*ServiceInfo{
 		Object:      "Mesh",
 		Service:     "Meshes",
 		Resource:    "meshes",
-		APIGroup:    NetworkServicesAPIGroup,
+		APIGroup:    APIGroupNetworkServices,
 		version:     VersionGA,
 		keyType:     Global,
 		serviceType: reflect.TypeOf(&ga.ProjectsLocationsMeshesService{}),
@@ -70,7 +68,7 @@ var NetworkServices = []*ServiceInfo{
 		Object:      "Mesh",
 		Service:     "Meshes",
 		Resource:    "meshes",
-		APIGroup:    NetworkServicesAPIGroup,
+		APIGroup:    APIGroupNetworkServices,
 		version:     VersionBeta,
 		keyType:     Global,
 		serviceType: reflect.TypeOf(&beta.ProjectsLocationsMeshesService{}),

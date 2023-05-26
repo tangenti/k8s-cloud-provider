@@ -36,7 +36,7 @@ type ServiceInfo struct {
 	Resource string
 	// APIGroup is the API group of the resource. When unspecified, "compute"
 	// will be assumed.
-	APIGroup string
+	APIGroup APIGroup
 	// version if unspecified will be assumed to be VersionGA.
 	version     Version
 	keyType     KeyType
@@ -72,7 +72,7 @@ func (i *ServiceInfo) VersionTitle() string {
 // GroupVersionTitle returns the capitalized golang CamelCase name for the API Group version.
 func (i *ServiceInfo) GroupVersionTitle() string {
 	prefix := ""
-	if i.APIGroup == NetworkServicesAPIGroup {
+	if i.APIGroup == APIGroupNetworkServices {
 		prefix = "NetworkServices"
 	}
 	return prefix + i.VersionTitle()
@@ -195,7 +195,7 @@ func (i *ServiceInfo) KeyIsZonal() bool {
 
 // NetworkServices is true if the APIGroup is networkservices.
 func (i *ServiceInfo) IsNetworkServices() bool {
-	return i.APIGroup == NetworkServicesAPIGroup
+	return i.APIGroup == APIGroupNetworkServices
 }
 
 // KeyIsProject is true if the key represents the project resource.

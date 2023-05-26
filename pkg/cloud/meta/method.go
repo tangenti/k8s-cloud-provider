@@ -141,7 +141,7 @@ func (m *Method) IsGet() bool {
 // argsSkip is the number of arguments to skip when generating the
 // synthesized method.
 func (m *Method) argsSkip() int {
-	if m.ServiceInfo.APIGroup == NetworkServicesAPIGroup {
+	if m.ServiceInfo.APIGroup == APIGroupNetworkServices {
 		return 2
 	}
 	switch m.keyType {
