@@ -150,7 +150,7 @@ func convertAndInsertAlphaForwardingRule(key *meta.Key, obj gceObject, mRules ma
 
 	fwdRule.Name = key.Name
 	if fwdRule.SelfLink == "" {
-		fwdRule.SelfLink = cloud.SelfLink(version, projectID, "forwardingRules", key)
+		fwdRule.SelfLink = cloud.SelfLink(meta.APIGroupCompute, version, projectID, "forwardingRules", key)
 	}
 
 	mRules[*key] = &cloud.MockForwardingRulesObj{Obj: fwdRule}
@@ -241,7 +241,7 @@ func convertAndInsertAlphaAddress(key *meta.Key, obj gceObject, mAddrs map[meta.
 	// Set default values used in tests
 	addr.Name = key.Name
 	if addr.SelfLink == "" {
-		addr.SelfLink = cloud.SelfLink(version, projectID, "addresses", key)
+		addr.SelfLink = cloud.SelfLink(meta.APIGroupCompute, version, projectID, "addresses", key)
 	}
 
 	if addr.Address == "" {
@@ -409,7 +409,7 @@ func UpdateFirewallHook(ctx context.Context, key *meta.Key, obj *ga.Firewall, m 
 
 	obj.Name = key.Name
 	projectID := m.ProjectRouter.ProjectID(ctx, "ga", "firewalls")
-	obj.SelfLink = cloud.SelfLink(meta.VersionGA, projectID, "firewalls", key)
+	obj.SelfLink = cloud.SelfLink(meta.APIGroupCompute, meta.VersionGA, projectID, "firewalls", key)
 
 	m.Objects[*key] = &cloud.MockFirewallsObj{Obj: obj}
 	return nil
@@ -425,7 +425,7 @@ func UpdateAlphaFirewallHook(ctx context.Context, key *meta.Key, obj *alpha.Fire
 
 	obj.Name = key.Name
 	projectID := m.ProjectRouter.ProjectID(ctx, "alpha", "firewalls")
-	obj.SelfLink = cloud.SelfLink(meta.VersionAlpha, projectID, "firewalls", key)
+	obj.SelfLink = cloud.SelfLink(meta.APIGroupCompute, meta.VersionAlpha, projectID, "firewalls", key)
 
 	m.Objects[*key] = &cloud.MockFirewallsObj{Obj: obj}
 	return nil
@@ -441,7 +441,7 @@ func UpdateBetaFirewallHook(ctx context.Context, key *meta.Key, obj *beta.Firewa
 
 	obj.Name = key.Name
 	projectID := m.ProjectRouter.ProjectID(ctx, "beta", "firewalls")
-	obj.SelfLink = cloud.SelfLink(meta.VersionBeta, projectID, "firewalls", key)
+	obj.SelfLink = cloud.SelfLink(meta.APIGroupCompute, meta.VersionBeta, projectID, "firewalls", key)
 
 	m.Objects[*key] = &cloud.MockFirewallsObj{Obj: obj}
 	return nil
@@ -457,7 +457,7 @@ func UpdateHealthCheckHook(ctx context.Context, key *meta.Key, obj *ga.HealthChe
 
 	obj.Name = key.Name
 	projectID := m.ProjectRouter.ProjectID(ctx, "ga", "healthChecks")
-	obj.SelfLink = cloud.SelfLink(meta.VersionGA, projectID, "healthChecks", key)
+	obj.SelfLink = cloud.SelfLink(meta.APIGroupCompute, meta.VersionGA, projectID, "healthChecks", key)
 
 	m.Objects[*key] = &cloud.MockHealthChecksObj{Obj: obj}
 	return nil
@@ -473,7 +473,7 @@ func UpdateAlphaHealthCheckHook(ctx context.Context, key *meta.Key, obj *alpha.H
 
 	obj.Name = key.Name
 	projectID := m.ProjectRouter.ProjectID(ctx, "alpha", "healthChecks")
-	obj.SelfLink = cloud.SelfLink(meta.VersionAlpha, projectID, "healthChecks", key)
+	obj.SelfLink = cloud.SelfLink(meta.APIGroupCompute, meta.VersionAlpha, projectID, "healthChecks", key)
 
 	m.Objects[*key] = &cloud.MockHealthChecksObj{Obj: obj}
 	return nil
@@ -488,7 +488,7 @@ func UpdateAlphaRegionHealthCheckHook(ctx context.Context, key *meta.Key, obj *a
 
 	obj.Name = key.Name
 	projectID := m.ProjectRouter.ProjectID(ctx, "alpha", "healthChecks")
-	obj.SelfLink = cloud.SelfLink(meta.VersionAlpha, projectID, "healthChecks", key)
+	obj.SelfLink = cloud.SelfLink(meta.APIGroupCompute, meta.VersionAlpha, projectID, "healthChecks", key)
 
 	m.Objects[*key] = &cloud.MockRegionHealthChecksObj{Obj: obj}
 	return nil
@@ -503,7 +503,7 @@ func UpdateBetaHealthCheckHook(ctx context.Context, key *meta.Key, obj *beta.Hea
 
 	obj.Name = key.Name
 	projectID := m.ProjectRouter.ProjectID(ctx, "beta", "healthChecks")
-	obj.SelfLink = cloud.SelfLink(meta.VersionBeta, projectID, "healthChecks", key)
+	obj.SelfLink = cloud.SelfLink(meta.APIGroupCompute, meta.VersionBeta, projectID, "healthChecks", key)
 
 	m.Objects[*key] = &cloud.MockHealthChecksObj{Obj: obj}
 	return nil
@@ -518,7 +518,7 @@ func UpdateBetaRegionHealthCheckHook(ctx context.Context, key *meta.Key, obj *be
 
 	obj.Name = key.Name
 	projectID := m.ProjectRouter.ProjectID(ctx, "beta", "healthChecks")
-	obj.SelfLink = cloud.SelfLink(meta.VersionBeta, projectID, "healthChecks", key)
+	obj.SelfLink = cloud.SelfLink(meta.APIGroupCompute, meta.VersionBeta, projectID, "healthChecks", key)
 
 	m.Objects[*key] = &cloud.MockRegionHealthChecksObj{Obj: obj}
 	return nil
@@ -533,7 +533,7 @@ func UpdateRegionHealthCheckHook(ctx context.Context, key *meta.Key, obj *ga.Hea
 
 	obj.Name = key.Name
 	projectID := m.ProjectRouter.ProjectID(ctx, "ga", "healthChecks")
-	obj.SelfLink = cloud.SelfLink(meta.VersionGA, projectID, "healthChecks", key)
+	obj.SelfLink = cloud.SelfLink(meta.APIGroupCompute, meta.VersionGA, projectID, "healthChecks", key)
 
 	m.Objects[*key] = &cloud.MockRegionHealthChecksObj{Obj: obj}
 	return nil
@@ -550,7 +550,7 @@ func UpdateRegionBackendServiceHook(ctx context.Context, key *meta.Key, obj *ga.
 
 	obj.Name = key.Name
 	projectID := m.ProjectRouter.ProjectID(ctx, "ga", "backendServices")
-	obj.SelfLink = cloud.SelfLink(meta.VersionGA, projectID, "backendServices", key)
+	obj.SelfLink = cloud.SelfLink(meta.APIGroupCompute, meta.VersionGA, projectID, "backendServices", key)
 
 	m.Objects[*key] = &cloud.MockRegionBackendServicesObj{Obj: obj}
 	return nil
@@ -567,7 +567,7 @@ func UpdateAlphaRegionBackendServiceHook(ctx context.Context, key *meta.Key, obj
 
 	obj.Name = key.Name
 	projectID := m.ProjectRouter.ProjectID(ctx, "alpha", "backendServices")
-	obj.SelfLink = cloud.SelfLink(meta.VersionAlpha, projectID, "backendServices", key)
+	obj.SelfLink = cloud.SelfLink(meta.APIGroupCompute, meta.VersionAlpha, projectID, "backendServices", key)
 
 	m.Objects[*key] = &cloud.MockRegionBackendServicesObj{Obj: obj}
 	return nil
@@ -584,7 +584,7 @@ func UpdateBetaRegionBackendServiceHook(ctx context.Context, key *meta.Key, obj 
 
 	obj.Name = key.Name
 	projectID := m.ProjectRouter.ProjectID(ctx, "beta", "backendServices")
-	obj.SelfLink = cloud.SelfLink(meta.VersionAlpha, projectID, "backendServices", key)
+	obj.SelfLink = cloud.SelfLink(meta.APIGroupCompute, meta.VersionAlpha, projectID, "backendServices", key)
 
 	m.Objects[*key] = &cloud.MockRegionBackendServicesObj{Obj: obj}
 	return nil
@@ -600,7 +600,7 @@ func UpdateBackendServiceHook(ctx context.Context, key *meta.Key, obj *ga.Backen
 
 	obj.Name = key.Name
 	projectID := m.ProjectRouter.ProjectID(ctx, "ga", "backendServices")
-	obj.SelfLink = cloud.SelfLink(meta.VersionGA, projectID, "backendServices", key)
+	obj.SelfLink = cloud.SelfLink(meta.APIGroupCompute, meta.VersionGA, projectID, "backendServices", key)
 
 	m.Objects[*key] = &cloud.MockBackendServicesObj{Obj: obj}
 	return nil
@@ -616,7 +616,7 @@ func UpdateAlphaBackendServiceHook(ctx context.Context, key *meta.Key, obj *alph
 
 	obj.Name = key.Name
 	projectID := m.ProjectRouter.ProjectID(ctx, "alpha", "backendServices")
-	obj.SelfLink = cloud.SelfLink(meta.VersionAlpha, projectID, "backendServices", key)
+	obj.SelfLink = cloud.SelfLink(meta.APIGroupCompute, meta.VersionAlpha, projectID, "backendServices", key)
 
 	m.Objects[*key] = &cloud.MockBackendServicesObj{Obj: obj}
 	return nil
@@ -632,7 +632,7 @@ func UpdateBetaBackendServiceHook(ctx context.Context, key *meta.Key, obj *beta.
 
 	obj.Name = key.Name
 	projectID := m.ProjectRouter.ProjectID(ctx, "beta", "backendServices")
-	obj.SelfLink = cloud.SelfLink(meta.VersionBeta, projectID, "backendServices", key)
+	obj.SelfLink = cloud.SelfLink(meta.APIGroupCompute, meta.VersionBeta, projectID, "backendServices", key)
 
 	m.Objects[*key] = &cloud.MockBackendServicesObj{Obj: obj}
 	return nil
@@ -648,7 +648,7 @@ func UpdateURLMapHook(ctx context.Context, key *meta.Key, obj *ga.UrlMap, m *clo
 
 	obj.Name = key.Name
 	projectID := m.ProjectRouter.ProjectID(ctx, "ga", "urlMaps")
-	obj.SelfLink = cloud.SelfLink(meta.VersionGA, projectID, "urlMaps", key)
+	obj.SelfLink = cloud.SelfLink(meta.APIGroupCompute, meta.VersionGA, projectID, "urlMaps", key)
 
 	m.Objects[*key] = &cloud.MockUrlMapsObj{Obj: obj}
 	return nil
@@ -664,7 +664,7 @@ func UpdateAlphaURLMapHook(ctx context.Context, key *meta.Key, obj *alpha.UrlMap
 
 	obj.Name = key.Name
 	projectID := m.ProjectRouter.ProjectID(ctx, "alpha", "urlMaps")
-	obj.SelfLink = cloud.SelfLink(meta.VersionAlpha, projectID, "urlMaps", key)
+	obj.SelfLink = cloud.SelfLink(meta.APIGroupCompute, meta.VersionAlpha, projectID, "urlMaps", key)
 
 	m.Objects[*key] = &cloud.MockUrlMapsObj{Obj: obj}
 	return nil
@@ -680,7 +680,7 @@ func UpdateBetaURLMapHook(ctx context.Context, key *meta.Key, obj *beta.UrlMap, 
 
 	obj.Name = key.Name
 	projectID := m.ProjectRouter.ProjectID(ctx, "beta", "urlMaps")
-	obj.SelfLink = cloud.SelfLink(meta.VersionBeta, projectID, "urlMaps", key)
+	obj.SelfLink = cloud.SelfLink(meta.APIGroupCompute, meta.VersionBeta, projectID, "urlMaps", key)
 
 	m.Objects[*key] = &cloud.MockUrlMapsObj{Obj: obj}
 	return nil
@@ -696,7 +696,7 @@ func UpdateAlphaRegionURLMapHook(ctx context.Context, key *meta.Key, obj *alpha.
 
 	obj.Name = key.Name
 	projectID := m.ProjectRouter.ProjectID(ctx, "alpha", "urlMaps")
-	obj.SelfLink = cloud.SelfLink(meta.VersionAlpha, projectID, "urlMaps", key)
+	obj.SelfLink = cloud.SelfLink(meta.APIGroupCompute, meta.VersionAlpha, projectID, "urlMaps", key)
 
 	m.Objects[*key] = &cloud.MockRegionUrlMapsObj{Obj: obj}
 	return nil
@@ -712,7 +712,7 @@ func UpdateBetaRegionURLMapHook(ctx context.Context, key *meta.Key, obj *beta.Ur
 
 	obj.Name = key.Name
 	projectID := m.ProjectRouter.ProjectID(ctx, "beta", "urlMaps")
-	obj.SelfLink = cloud.SelfLink(meta.VersionBeta, projectID, "urlMaps", key)
+	obj.SelfLink = cloud.SelfLink(meta.APIGroupCompute, meta.VersionBeta, projectID, "urlMaps", key)
 
 	m.Objects[*key] = &cloud.MockRegionUrlMapsObj{Obj: obj}
 	return nil
@@ -728,7 +728,7 @@ func UpdateRegionURLMapHook(ctx context.Context, key *meta.Key, obj *ga.UrlMap, 
 
 	obj.Name = key.Name
 	projectID := m.ProjectRouter.ProjectID(ctx, "ga", "urlMaps")
-	obj.SelfLink = cloud.SelfLink(meta.VersionGA, projectID, "urlMaps", key)
+	obj.SelfLink = cloud.SelfLink(meta.APIGroupCompute, meta.VersionGA, projectID, "urlMaps", key)
 
 	m.Objects[*key] = &cloud.MockRegionUrlMapsObj{Obj: obj}
 	return nil
@@ -1037,7 +1037,6 @@ func SetSslPolicyBetaTargetHTTPSProxyHook(ctx context.Context, key *meta.Key, re
 	tp.SslPolicy = ref.SslPolicy
 	return nil
 }
-
 
 // InsertFirewallsUnauthorizedErrHook mocks firewall insertion. A forbidden error will be thrown as return.
 func InsertFirewallsUnauthorizedErrHook(ctx context.Context, key *meta.Key, obj *ga.Firewall, m *cloud.MockFirewalls) (bool, error) {
